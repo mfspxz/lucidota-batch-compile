@@ -394,3 +394,111 @@ refs deduped deterministically; 10k refs in 0.02s; 5000-goal group
 
 **Suite**: 817 passed + 2 skipped (chmod/read-only probes skip as
 root), 3 consecutive full runs. Battery 151/151 x3. 0 provider calls.
+
+---
+
+## CYCLE 6 (2026-10-09)
+
+**New attacks** (not repeating cycles 1-5 or wave 5): deterministic
+grammar fuzz over the parser (5000 fixed-seed hostile cases + 300
+valid-biased + 300 manifest-conflict + 2000 regex-differential);
+hostile artifact content (traversal strings, 10MB, exact-cap/cap+1,
+null bytes, lone surrogates, receipt-shaped JSON confused-deputy,
+non-string types); artifact write-path containment (`..`,
+symlink-to-outside, file-where-dir, pre-planted symlink at target);
+retry termination under always-retryable faults + 1000-task retry
+storm; AttemptRecord fuzz (21 lookalikes incl. Cyrillic/fullwidth/
+zero-width, 7 non-str types, str subclasses).
+
+**Deferred, not executed**: lane 6A (multi-process envelope writers,
+byzantine prev_hash, SIGKILL lock release) stopped on its
+pre-condition — `shadow.py` had uncommitted PIPE-010 work from a
+concurrent lane. Zero attacks run, zero edits; re-dispatch
+recommended once shadow.py settles. (Cycle-2 precedent: observed,
+not mine, do not touch.)
+
+**150-fixture battery**: 151/151, 3x green (unchanged).
+
+**Confirmed defects FIXED (9)**:
+
+### C6B-001 — spaced-colon trailer raised raw AttributeError [HIGH]
+`workorder.py`: `"Group : x"` / `"Done-When : x"` escaped
+`parse_workorder` via `# type: ignore[union-attr]` lines. New
+`_trailer_value()` splits on first colon — total, never raises.
+
+### C6B-002 — lone surrogate raised UnicodeEncodeError [MED]
+`workorder.py`: on the success path at `text.encode("utf-8")`.
+Now fail-closed plain error up front.
+
+### C6B-003 — quadratic regex backtracking [MED]
+`workorder.py`: two competing `\s*` around the optional `[type]`
+group (`"Goal 1"` + 20KB spaces took 0.75s; 10MB would never
+finish). `\s*` moved inside the optional group — linear, proven
+language-equivalent by 2000-header differential test.
+
+### C6B-004 — unbounded input echo in errors [MED]
+`workorder.py`: a 10MB hostile line produced a 10,485,800-char
+error string. New `_clip_echo()` (80 chars + `[...truncated]`) on
+every attacker-controlled echo in parse/manifest/validate paths.
+
+### C6C-001 — lone-surrogate artifact_text raw UnicodeEncodeError [HIGH]
+`worker.py`: escaped `run_unit` (no sealed receipt, no
+`fail_dispatch`). Now named failed attempt (`adapter_malformed`).
+
+### C6C-002 — artifact write OSError escaped raw [MED]
+`worker.py`: now named failed attempt (`artifact_write_error`)
+with sealed receipt.
+
+### C6C-003 — artifact_dir .. wrote outside named dir [MED]
+`worker.py`: new `_contained_artifact_path()` resolves the base
+first; writes stay inside the resolved base.
+
+### C6C-004 — pre-planted symlink at target followed [HIGH]
+`worker.py`: predictable filename (`att-`+12 hex), no symlink
+check — proven "PWNED" clobber of an outside file. Now symlink at
+target -> `WorkerError` before any dispatch is created.
+
+### C6C-005 — unhashable terminal_state raw TypeError [LOW]
+`worker.py`: now fail-closed ValueError for all invalid states.
+
+**Fuzz result**: pre-fix exploratory run found 3166 defects (807
+raises, 2359 unbounded echoes) in the 5000-case corpus; post-fix: 0.
+Generator + seed (`0xC60B`) embedded in the test file for
+reproducibility.
+
+**Recorded (design, not patch)**:
+- R13 [LOW]: spaced-colon trailers accepted (completing the old
+  key-regex's evident intent); alternative was a plain error. Locked.
+- R14 [LOW]: surrogates rejected rather than surrogatepass-encoded
+  (keeps source_sha256 over strict UTF-8 bytes).
+- R15 [LOW]: no length cap on goal title / group / done_when (spec
+  caps objective/body/rules/type-id only) — a 10MB title is valid by
+  contract; spec lane may want a cap.
+- R16 [LOW]: lowercase `depends-on:` falls through as body line
+  while `Note:` -> unknown-trailer error (pre-existing
+  inconsistency, unchanged).
+- `elapsed_seconds=NaN` sails through the timeout gate
+  (`nan > timeout` is False) — inert here; candidate for a
+  non-finite-elapsed reject.
+- Symlink swapped between containment check and write = accepted
+  TOCTOU residual (same class as cycle-5 R11).
+- R1-R12 (cycles 1-5) still open; R4 (terminal-vocabulary
+  unification) still scheduler-lane work.
+
+**Behavior locks**: spaced-colon trailers parse as trailers;
+surrogates -> plain error; regex linear (differential-proven);
+error echoes clipped at 80 chars; artifact writes contained;
+symlink-at-target -> WorkerError pre-dispatch; retry loop
+terminates at dead-letter under always-retryable faults (all
+attempt classes x tiers); 1000-task retry storm -> all terminal,
+all dead-letters readable; AttemptRecord lookalikes rejected.
+
+**Environment note**: one full-suite run showed 1 failure that never
+reproduced (935 green on re-run); a concurrent lane was editing
+`live_adapters_test.py` mid-run (test counts varied 928 -> 935
+across runs). Verification runs are only meaningful when no other
+lane is mid-edit; counts must be stable across the 3x.
+
+**Suite**: 928-935 passed + 3 skipped (root/chmod probes), 3
+consecutive full runs green at final count. Battery 151/151 x3.
+0 provider calls.
