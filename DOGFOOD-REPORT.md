@@ -195,3 +195,99 @@ cd ~/workspace/compute
 python3 -m pipeline.driver --live --adapter pipeline.live_adapters:GeminiDirectAdapter --provider gemini-direct ~/workspace/batch-compile/dogfood2.work-order.txt --run-dir runs/dogfood2
 cd pipeline && python3 -m pytest live_adapters_test.py -q   # 0 provider calls (fake generator)
 ```
+
+# Benchmark 2b — DeepSeek live (2026-10-09, ~13:44–13:52 PDT)
+
+Zack's order: use DeepSeek now — his paid resource. Re-ran the relnotes
+dogfood with a new `DeepSeekDirectAdapter` (model deepseek-flash), prose
+units only: DeepSeek is disqualified for codegen by the standing
+chain-of-thought leak defect, so the work order's dev rules were updated
+(allow-list deepseek, 8192 output tokens/call because CoT eats the budget,
+prose generation only, code units deterministic) and the live run used a
+prose-scoped work order (`dogfood2b.work-order.txt`: contract doc,
+drafting-prompt design notes, README).
+
+## What was built first (adapter)
+
+`DeepSeekDirectAdapter` in `pipeline/live_adapters.py`, mirroring
+`GeminiDirectAdapter`: `execute(envelope) -> {artifact_text, response,
+elapsed_seconds}`, one chat-completions call per envelope, surrogate
+`custom.deepseek` credential attached to the request only, pacing at <=6
+RPM (RPM/TPM ceilings UNKNOWN — conservative), 429/402 → `AdapterError`
+with no internal retry (hard stop; the driver's fixed retry vocabulary
+owns retries), reasoning vs visible tokens accounted separately in
+`live-usage.jsonl`. One real bug found in review: a whitespace-only
+artifact slipped the emptiness check — fixed to fail closed
+(`text.strip()`).
+
+## The live run (measured)
+
+`run-20261009T204843Z-d897efed`, `--max-attempts 1` (no retries per the
+hard-stop rule). Wall 70.3 s. Planned 4, dispatched 3, attempts 3,
+completed 3, failed 0, dead letters 0, checks pass 3/3. T1 final-glue unit
+blocked 1 — correct fail-closed, not a defect: with zero T2 bundles the
+kit had no `evidence_refs`, and the gate refuses to run coherence glue on
+no evidence. `quota_used: {'deepseek': 3}` — exactly 3 calls, within cap.
+
+Per-call (deepseek-flash):
+
+| Call | prompt tok | completion tok | reasoning tok | visible ≈ | latency |
+|---|---|---|---|---|---|
+| 1 (contract) | 336 | 1122 | 170 (15%) | ~952 | 7.1 s |
+| 2 (design notes) | 323 | 5849 | 4454 (76%) | ~1395 | 30.7 s |
+| 3 (README) | 343 | 6533 | 5728 (88%) | ~805 | 29.0 s |
+| **Total** | **1002** | **13,504** | **10,352 (77%)** | **~3,152** | |
+
+No 429/402 observed; pacing held (≥10 s between calls). Cost: $0 in
+provider-reported fields (DeepSeek exposes no balance/cost in the API;
+3 calls, ~14.5k tokens total).
+
+## The number that matters
+
+**77% of all generated tokens were chain-of-thought reasoning, not
+artifact.** Calls 2 and 3 spent 76% and 88% of their budgets on reasoning;
+under the old 2048-token cap both would have truncated or returned empty
+visible content (exactly the probe's observed failure: 64 tokens, all
+reasoning, empty prose). The 8192 budget was load-bearing, not generous.
+Latency scaled with output length (7 s → 31 s), not with prompt size.
+
+## App completion (deterministic track)
+
+Code units written directly per the work order's own rule
+("deterministic logic stays deterministic"): `__main__.py` (argv parsing,
+exit 2 on bad usage, injected `generate`, never imports a provider),
+`gitlog.py` (NUL-delimited `git log` parsing, pure function),
+`draft.py` (deterministic prompt assembly, injected generator),
+`test_relnotes.py`. **14/14 green.** `python3 -m relnotes` with no args →
+exit 2 + usage line. End-to-end smoke on the real compute repo: 3 commits
+parsed, markdown written, rc 0. The three DeepSeek-generated prose docs
+were placed in `~/workspace/relnotes/` with provenance
+(`PROVENANCE.md`: run dir, task→artifact mapping, usage-log window).
+
+## Verdict: DeepSeek PROVEN as a prose generation provider (conditionally)
+
+**PROVEN for prose**, with two measured conditions: (1) budget max_tokens
+at 4–8x the expected visible length — CoT demonstrably eats up to 88% of
+a call's budget; (2) expect high latency variance tied to output length.
+No throttling observed at ≤6 RPM; ceilings remain UNKNOWN. **Codegen
+remains DISQUALIFIED** — not re-tested here by design (zero codegen
+prompts were sent, per the standing defect).
+
+Defects found by source: 1 by lane code review (whitespace-empty
+slip, fixed same-turn), 1 by the driver itself (multi-line dev rules
+rejected by the work-order grammar — the exact dogfood-2 lesson,
+fixed by single-lining). 0 by provider behavior.
+
+Bottleneck for live dogfooding generally is unchanged from Benchmark 2:
+**provider quota availability at dispatch time** — this run succeeded
+because DeepSeek was reachable; a 429-hard-stop on the single allowed
+provider would have stopped it the same way Gemini's did.
+
+## Repro
+
+```
+cd ~/workspace/compute
+python3 -m pipeline.driver --live --adapter pipeline.live_adapters:DeepSeekDirectAdapter --provider deepseek --max-attempts 1 ~/workspace/batch-compile/dogfood2b.work-order.txt
+cd pipeline && python3 -m pytest live_adapters_test.py -q   # 0 provider calls (fake generator)
+cd ~/workspace/relnotes && python3 -m pytest test_relnotes.py -q
+```

@@ -1,0 +1,21 @@
+Objective: Generate the prose documentation for the `relnotes` CLI via live DeepSeek generation through the pipeline driver: interface contract, drafting-prompt design notes, README. Small, real, shippable prose -- the generative third of the relnotes dogfood (code units are built deterministically under dogfood2.work-order.txt).
+
+Development rules:
+- Production prose only. No filler, no placeholders, no lorem ipsum.
+- Quota budget cap: at most 3 provider calls total (3 prose units x 1 attempt; no retries per the hard-stop rule), 8192 output tokens max per call (chain-of-thought eats the budget -- request generously). Adapter paces at <=6 RPM. Stop before exceeding.
+- Provider allow-list: deepseek ONLY (model deepseek-flash). Prose generation only -- DeepSeek is disqualified for codegen by the standing chain-of-thought leak defect.
+- No secret material in prompts, logs, or artifacts. If any appears, fail closed: stop the unit, report, do not retry blindly.
+- Fail-closed on guard trip: if a provider guard trips mid-run, stop dispatch, keep completed work, record the trip.
+- Preserve existing work. Write scope: ~/workspace/relnotes/ only.
+
+Goal 1 [inspect]: Write RELNOTES-CONTRACT.md.
+Interface contract prose: argv shape (`relnotes <range> [--out FILE]`), the git command used (`git log <range> --pretty=format:...` with the five fields hash, subject, body, author, date), LLM prompt inputs (the commit list and its fields), markdown output sections (Highlights, Breaking changes, Contributors). Precise, complete, no code.
+Done-When: RELNOTES-CONTRACT.md exists in ~/workspace/relnotes/ and names every interface.
+
+Goal 2 [implement]: Write DRAFT-PROMPT-DESIGN.md.
+Design notes for the release-note drafting prompt: how commit subjects map to Highlights entries, breaking-change detection heuristics (`!:` suffix, BREAKING CHANGE trailers), contributor thanks-list format derived from author names, tone and length guidance for the generated prose. Prose only, no code.
+Done-When: DRAFT-PROMPT-DESIGN.md exists and covers all four topics.
+
+Goal 3 [implement]: Write README.md.
+relnotes README: what it does, installation, usage examples (`relnotes v1.2.0..HEAD`, `--out FILE`), exit codes (0 ok, 2 usage error), and the deterministic-vs-LLM split (git parsing and markdown assembly are pure functions; the LLM drafts prose sections). Prose with shell examples only, no implementation code.
+Done-When: README.md exists and documents install, usage, exit codes, and the deterministic/LLM split.

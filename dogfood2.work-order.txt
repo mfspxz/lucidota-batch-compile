@@ -4,8 +4,8 @@ Contributors). Small, real, shippable.
 
 Development rules:
 - Production code only. No sketches, no placeholders.
-- Quota budget cap: at most 8 provider calls total (6 T3 + 1 T1 + 1 retry spare), 2048 output tokens max per call. Stop before exceeding.
-- Provider allow-list: gemini-direct ONLY. NVIDIA is band-paused; DeepSeek is disqualified for code generation (chain-of-thought leak).
+- Quota budget cap: at most 3 provider calls total (3 prose units x 1 attempt; no retries per the hard-stop rule), 8192 output tokens max per call (chain-of-thought eats the budget -- request generously). Adapter paces at <=6 RPM. Stop before exceeding.
+- Provider allow-list: deepseek ONLY (model deepseek-flash). DeepSeek is disqualified for code generation (standing chain-of-thought leak defect): the LLM generates PROSE artifacts only; code units are produced deterministically by the lane and verified by the test suite.
 - No secret material in prompts, logs, or artifacts. If any appears, fail closed: stop the unit, report, do not retry blindly.
 - Fail-closed on guard trip: if a provider guard trips mid-run, stop dispatch, keep completed work, record the trip.
 - Preserve existing work. Write scope: ~/workspace/relnotes/ only.
