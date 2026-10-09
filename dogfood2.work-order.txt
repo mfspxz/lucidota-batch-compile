@@ -1,0 +1,54 @@
+Objective: Build the `relnotes` CLI: `relnotes v1.2.0..HEAD` reads a git log
+range and drafts release notes as markdown (Highlights, Breaking changes,
+Contributors). Small, real, shippable.
+
+Development rules:
+- Production code only. No sketches, no placeholders.
+- Quota budget cap: at most 8 provider calls total (6 T3 + 1 T1 + 1 retry spare), 2048 output tokens max per call. Stop before exceeding.
+- Provider allow-list: gemini-direct ONLY. NVIDIA is band-paused; DeepSeek is disqualified for code generation (chain-of-thought leak).
+- No secret material in prompts, logs, or artifacts. If any appears, fail closed: stop the unit, report, do not retry blindly.
+- Fail-closed on guard trip: if a provider guard trips mid-run, stop dispatch, keep completed work, record the trip.
+- Preserve existing work. Write scope: ~/workspace/relnotes/ only.
+- Deterministic logic stays deterministic: git parsing and markdown assembly are pure functions; the LLM drafts prose sections only.
+
+Goal 1 [inspect]: Record the interface contract.
+Inspect the pipeline live-adapter response contract (artifact_text /
+response / elapsed_seconds) and `git log --pretty` format placeholders.
+Write the contract down as RELNOTES-CONTRACT.md in ~/workspace/relnotes/:
+argv shape, git command used, LLM prompt inputs, markdown output sections.
+Done-When: RELNOTES-CONTRACT.md exists and names every interface.
+
+Goal 2 [implement]: Implement argument parsing.
+Implement ~/workspace/relnotes/__main__.py argv parsing: `relnotes <range>
+[--out FILE]`. Plain errors for missing range or bad flags (exit 2).
+No LLM calls in this unit.
+Done-When: `python3 -m relnotes` with no args exits 2 with a usage line.
+
+Goal 3 [implement]: Implement git log extraction (deterministic).
+Implement ~/workspace/relnotes/gitlog.py: `commits(range) -> list[dict]`
+with keys hash, subject, body, author, date — via subprocess
+`git log <range> --pretty=format:...`. Pure parsing; no LLM calls.
+Done-When: function returns structured commits for a fixture repo.
+
+Goal 4 [implement]: Implement the LLM drafting unit.
+Implement ~/workspace/relnotes/draft.py: `draft(commits, generate) ->
+str` where `generate(prompt, max_tokens) -> str` is INJECTED (never
+imports a provider). Build the drafting prompt deterministically from
+the commit list; call generate once; return its markdown. Sections:
+Highlights, Breaking changes (from `!:` / BREAKING CHANGE markers),
+Contributors (thanks list from authors).
+Done-When: draft() with a fake generate returns the three sections.
+
+Goal 5 [implement]: Implement output writing and wire the CLI.
+Wire __main__: parse args -> gitlog.commits(range) -> draft.draft with
+the real generate callable -> write markdown to stdout or --out file.
+Keep provider wiring behind the injected callable; __main__ must not
+import any provider module.
+Done-When: end-to-end on a fixture repo with fake generate prints markdown.
+
+Goal 6 [test]: Write the test suite.
+Write ~/workspace/relnotes/test_relnotes.py covering: arg parsing
+(valid/invalid), gitlog parsing on fixture log text, draft prompt
+assembly with fake generate (three sections present), and the
+no-provider-import rule for __main__ (static: grep). All green.
+Done-When: `python3 -m pytest test_relnotes.py -q` passes.
