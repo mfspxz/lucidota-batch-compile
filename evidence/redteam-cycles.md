@@ -159,3 +159,117 @@ own in-flight work; not touched by this cycle. Commits: cycle-3 attacks
 (19). 0 provider calls across all 3 cycles.
 
 
+
+---
+
+## CYCLE 4 (2026-10-09)
+
+**New attacks** (not repeating cycles 1-3 or wave 5): driver `--live`
+`--adapter MODULE:CLASS` injection surface (14 malformed specs, CLI
+exit-code/stderr locks, import-time side-effect proof, sys.modules
+cache poisoning, fake-seam malformations); quota coordinator crash
+recovery (kill -9 in narrowest window via os._exit probes, torn last
+line, in-flight holds across restart, double replay, log
+deleted/swapped, corrupt middle line); append-only stores under
+crash/kill (16-thread concurrent writers incl. 100KB payloads,
+envelope chain fork, torn-write kill vs every reader, empty/whitespace
+files, reader-racing-writer, wrong-schema/unknown-field receipts).
+
+**150-fixture battery**: 151/151, 3x green (unchanged).
+
+**Confirmed defects FIXED (7)**:
+
+### D4B-001 — replay_log crashed on torn/corrupt log lines [HIGH]
+`allocate.py`: `JSONDecodeError`/`KeyError` on any torn/corrupt line
+made crash recovery impossible after a mid-append kill. Now
+skip-and-count with line numbers in `replay_anomalies`.
+
+### D4B-002 — replay re-held time-expired reservations [MEDIUM]
+`allocate.py`: overstated `held` (false `BUDGET_EXCEEDED`) until a
+sweep ran. Now TTL-aware at replay; dead holds rebuild as `"expired"`.
+
+### D4B-003 — missing log / unknown-pool reservations silent [LOW]
+`allocate.py`: now surfaced via `replay_anomalies` (empty on clean logs).
+
+### C4A-002 — SystemExit/KeyboardInterrupt escaped run_unit [MEDIUM]
+`worker.py`: hostile `execute()` raising bare `SystemExit` exited the
+process 0 (silent success), no sealed receipt. Now: `SystemExit` ->
+named failed attempt (`adapter_system_exit`); `KeyboardInterrupt` ->
+attempt recorded failed + `fail_dispatch`, then re-raised (operator
+interrupt still aborts, no zombie "executing").
+
+### C4-001 — raw codec exceptions escaping shadow readers [MEDIUM]
+`shadow.py`: non-dict JSON -> `AttributeError`, 100k-deep nesting ->
+`RecursionError`, invalid UTF-8 -> `UnicodeDecodeError`. Now
+`_loads_line()` (ValueError + RecursionError -> corrupt-line signal),
+non-dict JSON treated as corrupt, snapshot decode `errors="replace"`;
+data readers skip deterministically, verifiers fail closed naming the line.
+
+### C4-002 — authentic-but-wrong-schema receipts verified True [MEDIUM]
+`shadow.py`: `verify_receipts` checked authenticity but not schema.
+Now `_check_receipt_schema` after `verify_chain`: payload `schema`
+must equal `RCPT_SCHEMA`, no unknown top-level fields, `class` in
+`DIVERGENCES` — else `ShadowError` naming receipt index + value.
+
+### C4-003 — envelope chain fork under concurrent writers [MEDIUM]
+`shadow.py`: two writers sealing onto the same stale `prev_hash`
+forked the chain (detection existed, prevention did not). Now
+`_append` is a single `os.write` under process-wide thread lock +
+advisory `LOCK_EX` (fsync preserved); `_append_with_tail` makes
+read-tail->seal->append one critical section; readers snapshot under
+`LOCK_SH`.
+
+**Recorded (not patched — file owned by concurrent lane, patch provided)**:
+- **C4A-001 [HIGH]**: `_load_cli_adapter`'s `cls()` wrapped in
+  `except Exception`; a spec whose `__init__` raises `SystemExit`
+  (e.g. `--adapter sys:exit`) escapes raw -> process exits 0 on the
+  `--live` path (silent success, inverse of fail-closed). Pinned by 2
+  documenting tests. Proposed patch: `except BaseException` around
+  `cls()` -> `AdapterSpecError`.
+- **C4A-003 [MEDIUM]**: provider exception mid-call escapes
+  `GeminiDirectAdapter.execute()` raw (not `AdapterError`), no
+  usage-log line (violates "one JSON line per call"). Proposed: wrap
+  `_call_provider`, log status `"error"`, raise `AdapterError`.
+- **C4A-004 [LOW]**: non-dict provider payload -> raw
+  `AttributeError`, no log. Fold into C4A-003 with isinstance check.
+
+**Recorded (design, not patch)**:
+- R5 [MED]: no plan-chain verifier — `plans.jsonl` chains
+  prev_hash/seal but nothing verifies it.
+- R6 [LOW]: crash-recovery contract pinned — tail-read skips torn
+  tail, but `verify_receipts` fails closed on the torn line until
+  manually removed (auto-skip would let an attacker delete a receipt
+  by truncation; repair stays manual by design).
+- R7 [LOW]: `claim_id` uniqueness not enforced; concurrent
+  `compare_shadow` with identical (window_id, cycle) mints duplicate
+  claim IDs.
+- R8 [LOW]: advisory `flock` coordinates cooperating writers only; a
+  foreign process appending raw bytes can still tear/fork (verify
+  fails closed).
+- Adapter R5 [MED]: `--adapter` executes arbitrary import-time code
+  by design (proven with counter file); consider allowlist or
+  adapters-dir restriction.
+- Adapter R6 [LOW]: no adapter-side output cap (`MAX_OUTPUT_TOKENS`
+  is request-side); enforcement is `worker.MAX_ARTIFACT_CHARS=1M`.
+- Adapter R7 [LOW]: `_read_text` follows provider-supplied
+  `raw_output_ref` with no size cap (trust boundary = provider).
+- R1-R4 (cycles 1-2) still open.
+
+**Behavior locks**: 16 threads x 8 receipts -> zero torn lines
+(O_APPEND line atomicity holds empirically); fork DETECTED by
+verify_chain; reader-racing-writer -> clean monotone verified
+prefixes; kill-in-narrowest-window -> exact replay restore;
+TTL-1 sweeps nothing / exactly-TTL expires; double replay is a
+no-op; every malformed `--adapter` spec -> plain AdapterSpecError,
+exit 1, no traceback, no run dir; `--live` without `--adapter` ->
+plain error, never fake-adapter downgrade; import-time side effects
+proven to execute (documented, by design).
+
+**Environment note**: `/tmp` is a 512MB tmpfs shared across lanes;
+repeated full-suite runs filled it -> phantom ENOSPC failures
+(59 failed, pytest INTERNALERROR), none reproducible with space.
+Verification used `--basetemp` on real disk. Lanes: route pytest
+tmp off /tmp.
+
+**Suite**: 741 passed, 3 consecutive full runs. Battery 151/151 x3.
+Commits: cycle-4 attacks + 7 fixes. 0 provider calls.
