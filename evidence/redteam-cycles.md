@@ -502,3 +502,67 @@ lane is mid-edit; counts must be stable across the 3x.
 **Suite**: 928-935 passed + 3 skipped (root/chmod probes), 3
 consecutive full runs green at final count. Battery 151/151 x3.
 0 provider calls.
+
+---
+
+## CYCLE 7 (2026-10-09)
+
+**New attacks** (not repeating cycles 1-6 or wave 5): lane 6A
+multi-process envelope writers (8 procs x 25 locked appends; writers
+SIGKILLed mid-append; byzantine fork/replay/splice/tamper/garbage
+prev_hash; SIGKILL while holding LOCK_EX; torn-tail fail-closed);
+run-dir isolation under concurrent runs (same-second same-workorder
+collision, 4-proc id uniqueness, concurrent dry-runs); falsification
+chain (verify racing concurrent appender, truncation, mid-file corrupt
+line, caller chain-field injection, legacy-prefix tamper, full rewrite).
+
+**Confirmed defects FIXED (1)**:
+
+### C7B-001 — same-second run_id collision -> run-dir clobber [MED]
+`driver.make_run_id` used a second-granularity stamp: two runs of the
+same work order starting in the same second got the same run_id -> the
+same run dir -> silent last-writer-wins clobber of run-receipt.json /
+report.json (the foreign-receipt check passes: same work_order_sha256).
+Now microseconds + pid; run_id identifies a RUN, not a work order.
+Dead `_utc_stamp()` removed (no other users, grep-proven).
+
+**Confirmed defect, UNPATCHED (out of lane write scope)**:
+
+### C7C-001 — verify_chain torn-read race [MED]
+`integrity.verify_chain` reads without the sidecar inter-process lock
+while `append_chained` writes under `<name>.lock` LOCK_EX: a verifier
+racing an appender can observe a torn tail and report spurious
+corruption on a file that verifies clean once appends stop (proven by
+intermittent xfail in `test_7c_verify_under_concurrent_append` -- the
+final file always verifies). Fix: take LOCK_SH on the sidecar lock in
+verify_chain/_read_chunks. integrity.py is outside this lane's write
+scope (pipeline/ + evidence only); flagged for a follow-up lane.
+
+**Recorded (design, not patch)**:
+- R17: unkeyed hash chains cannot detect truncation (prefix verifies);
+  needs an external length anchor.
+- R18: mid-file corrupt line bricks verify_chain forever even as valid
+  appends continue (fail-closed wins over availability; repair manual).
+- R19: full rewrite with recomputed hashes verifies -- unkeyed chains
+  are tamper-evident, not tamper-proof; defense is append-only file
+  control + external manifests.
+- Lane-6A deferred item now EXECUTED: shadow.py locked-I/O layer held
+  all 9 attacks (no fork under 8-way writers, byzantine prev_hash
+  fails closed at the exact envelope, SIGKILL releases flock via the
+  kernel, torn tail skips at tail-read / fails closed at verify).
+- compute/queue.py shadows stdlib `queue` under pytest: mp.Queue() is
+  unusable in tests (parent breaks at context.py); file-based IPC used.
+- Explicit --run-dir reuse across modes with the same work order is
+  allowed by design (user asked for that dir); only the accidental
+  same-second default-dir collision was a defect.
+
+**Behavior locks**: run_ids unique across processes/microseconds;
+two concurrent dry-runs of one work order -> two dirs, both receipts
+verify; byzantine prev_hash always fails closed naming the envelope;
+caller-supplied _seq/_prev_hash/_record_hash ignored by append_chained;
+legacy-prefix tamper detected via genesis anchor.
+
+**150-fixture battery**: 151/151, 3x green (unchanged).
+
+**Suite**: 953 passed + 3 skipped, 3 consecutive full runs green
+(1 xfail: C7C-001 race, intermittent). 0 provider calls.
