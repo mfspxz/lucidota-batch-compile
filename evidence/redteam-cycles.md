@@ -635,3 +635,66 @@ across crashes.
 
 **Suite**: 968-969 passed + 3 skipped (+1 xfail: C7C-001 race),
 3 consecutive full runs green. 0 provider calls.
+
+---
+
+## CYCLE 9 (2026-10-09)
+
+**New attacks** (not repeating cycles 1-8 or wave 5): receipt schema
+compat (non-dict/missing seal, old schema, extra fields, hostile
+attempt entries, wrong-type digest, non-dict receipt); partition
+boundary fuzz (seeded 60-trial property fuzz over counts 0..100 +
+boundary counts incl. 1000, malformed pw shapes); shadow comparator
+adversarial (duplicate actual ids, order-diff games, provider-spoof
+matrix, stream-slot collision, unplanned/unexecuted, 500-scale).
+
+**Confirmed defects FIXED (3)**:
+
+### 9B-2 — duplicate singleton bundle ids [HIGH]
+`_t2_bundle` keyed singleton ids on `single:{goal_n}`: a subdivided
+dependent goal produced one singleton bundle per sub-unit, ALL sharing
+a single bundle_id (proven: 5 bundles, 1 id). `schedule_order` indexes
+bundles by bundle_id (allocate.py:869), so 4 bundles' t3_result_refs
+were lost and inter-bundle ordering broke silently. Now keyed on
+goal_ref ("N.a") with fallback to n for undivided goals (historical
+ids stable).
+
+### 9A-1 — verify_run_receipt raw AttributeError [MED]
+A non-dict "seal" (str/list/int/bool) escaped `.get` as a raw
+AttributeError from the verification function. Now "seal_malformed".
+
+### 9B-1 — partition raw AttributeError on malformed pw [MED]
+`partition_checklist`/`group_related` raised raw AttributeError when
+goals was not a list (or entries not dicts, or pw not a dict). Now
+plain ValueError via `_goals_list` (defense in depth; the driver
+validates first).
+
+**Spec/code contradiction resolved (docstring, not code)**:
+
+### R23 — PROVIDER_DIFF "both sides" vs fail-loud
+`_classify`'s docstring said "PROVIDER_DIFF fires only when both sides
+name a provider"; the code fires when the actual names one that
+differs (including a silent plan). Contradiction is original (both
+written in 79c795f). For a divergence detector the fail-loud direction
+is safer -- a named actual against a silent plan IS a plan/reality
+divergence -- so the docstring was corrected to the code and the
+behavior pinned by test. Coverage predicate unaffected (PROVIDER_DIFF
+counts as planned_for either way).
+
+**Recorded (design, not patch)**:
+- R22: receipt sealing is O(n^2) (`_append_with_tail` re-reads the
+  whole file per receipt): 10k receipts >6 min, 2k >100s. Fine for
+  Phase-1 volumes (tens/hundreds); a tail-cache would fix it if
+  volumes grow.
+
+**Behavior locks**: old-schema receipts fail closed (schema_mismatch,
+never silent verify); extra fields ignored; duplicate actual task_ids
+dedupe deterministically; stream slot collision -> first allocation
+wins; actuals key stream slots via `slot_id` (not `stream_slot`);
+partition invariants hold over the fuzz corpus (unique unit/bundle
+ids, no dropped goals, dependents never T3, determinism).
+
+**150-fixture battery**: 151/151, 3x green (unchanged).
+
+**Suite**: 985-986 passed + 3 skipped (+1 xfail: C7C-001 race),
+3 consecutive full runs green. 0 provider calls.
