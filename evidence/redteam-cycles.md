@@ -791,3 +791,39 @@ mixed-version chains fail naming the index.
 a dropped `chunks.append(b)` re-anchored every batch at GENESIS;
 caught by shadow_test + redteam_cycle4c, fixed, equivalence test
 strengthened to cover multi-batch chaining.) 0 provider calls.
+
+---
+
+## CYCLE 12 (2026-10-09)
+
+**New attacks** (not repeating cycles 1-11 or wave 5): run-dir
+symlink farms (9 tests in `redteam_cycle12_test.py`): run dir that
+IS a symlink, planted symlinks (stray + as run-receipt.json),
+FIFO/socket as run-receipt.json, symlink planted after validation
+(write-time defense), `..` escape, foreign vs same-sha receipt;
+adversarial quota-log replay (torn tail, corrupt JSON, unknown
+events/pools, negative units, wrong types); hostile retry args
+(10^18 attempts, negative/bool attempts, bad tiers, unknown/None
+classes); partitioner hostiles (duplicate goal numbers,
+self-dependency, 1MB goal).
+
+**C12-001 FIXED** [MED/DoS]: `_open_run_dir` called
+`receipt.read_text()` on run-receipt.json without checking its file
+type: a FIFO (or socket/device) planted as run-receipt.json blocked
+the read forever -- proven hang (killed by timeout at 20s). The
+pre-existing symlink scan missed non-symlink specials. Fix: refuse
+any non-regular run-receipt.json (symlink/FIFO/socket/device) with
+a plain RunDirError before reading. Hang-regression guarded by a
+thread+join timeout in the test.
+
+**Held**: symlink farms refused at open and at write time;
+`..` escape refused; foreign receipt refused, same-sha re-run
+allowed; replay never crashes, anomalies name every skip, good
+records apply exactly (held==3); retry hostiles all plain
+ValueError, huge attempts resolve to the exhausted action;
+partitioner hostiles are clean parse errors.
+
+**150-fixture battery**: 151/151, 3x green (unchanged).
+
+**Suite**: 1034 passed + 3 skipped, 3 consecutive full runs green.
+0 provider calls.
