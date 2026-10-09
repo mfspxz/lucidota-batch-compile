@@ -273,3 +273,124 @@ tmp off /tmp.
 
 **Suite**: 741 passed, 3 consecutive full runs. Battery 151/151 x3.
 Commits: cycle-4 attacks + 7 fixes. 0 provider calls.
+
+---
+
+## CYCLE 5 (2026-10-09)
+
+**New attacks** (not repeating cycles 1-4 or wave 5): governor
+receipt verification edges (forged cited receipts, cross-run replay,
+policy-version mismatch, malformed oracle verdicts incl.
+`verdict=1`, hostile ref paths incl. FIFOs + 32MiB sparse files,
+oracle raising BaseException); tier-2 bundle merge gates (exact
+within-bound boundary probe, dangling t3_result_refs, zero-member
+bundles, duplicate member refs, 10k-ref bundles, wrong-typed evidence,
+group_related adversarial incl. 5000-goal groups); driver `--adapter`
+recorded-defect fixes + run-dir containment (traversal, absolute
+outside cwd, symlink chain attacks, file collision, uncreatable
+paths, non-writable dirs, symlink planted inside run dir, foreign
+run-receipt).
+
+**150-fixture battery**: 151/151, 3x green (unchanged).
+
+**Confirmed defects FIXED (12)**:
+
+### C4A-001 — SystemExit escaping --adapter instantiation [HIGH]
+`driver.py`: `except Exception` around `cls()` let a hostile
+`__init__` (e.g. `--adapter sys:exit`) exit the process 0 — silent
+success on the `--live` path. Now `except BaseException` ->
+`AdapterSpecError`, exit 1, plain stderr. The 2 documenting tests now
+assert the fixed behavior.
+
+### C4A-003 — raw provider exception, no usage log [MEDIUM]
+`live_adapters.py`: wrapped `_call_provider` -> usage-log line with
+status `"error"`, then `AdapterError`. Deliberately `Exception` not
+`BaseException`: SystemExit/KeyboardInterrupt still reach
+`worker.run_unit` (C4A-002 owns that contract).
+
+### C4A-004 — non-dict provider payload raw AttributeError [LOW]
+`live_adapters.py`: isinstance check -> usage-log `"error"` line +
+`AdapterError`.
+
+### C5B-001 — cited governor_receipt_ref never verified [HIGH]
+`checks.py`: an oracle verdict citing a fabricated/nonexistent
+receipt passed on verdict alone. Now a cited ref MUST verify (bounded
+read -> JSON -> schema -> `integrity.verify_seal` -> task_id binding
+-> `policy_version == router.POLICY_VERSION`) before True is honored.
+
+### C5B-002 — BaseException from oracle escaped raw [HIGH]
+`checks.py`: hostile oracle `SystemExit` unwound the interpreter.
+Now named failed CheckResult (`oracle_system_exit`); KeyboardInterrupt
+-> failed record attached via `exc.add_note`, then re-raised.
+
+### C5B-003 — malformed oracle outputs slipped guards [MEDIUM]
+`checks.py`: `verdict=1` slipped `in (True,False,None)`; bad
+evidence_refs/measured raised ValueError; unknown keys silently
+ignored. Now strict identity verdict check, closed key set, all
+malformed shapes -> deterministic failed CheckResults.
+
+### C5B-004 — hostile ref paths [MEDIUM]
+`checks.py`: regular-file gate (no open() on FIFOs/devices), chunked
+reads capped at 1 MiB, OSError -> named failure.
+
+### C5C-001 — zero-member bundle vacuous pass [HIGH]
+`checks.py`: `item_ids=[]` with artifacts consumed -> `passed=True`.
+Now fail-closed False, agreeing with
+`driver_guards.t2_check_ready`.
+
+### C5C-002 — non-serializable artifact content raw TypeError [MEDIUM]
+`checks.py`: now named ValueError.
+
+### C5C-003 — non-dict artifact measured raw AttributeError [MEDIUM]
+`checks.py`: now named ValueError ("measured: dict required").
+
+### C5C-004 — within with zero present values crashed [MEDIUM]
+`checks.py`: `max([])` ValueError -> degrades to `unknown`
+("unmeasurable").
+
+### C5C-005 — group_related silently dropped dangling depends_on [HIGH]
+`partition.py`: targets resolving to neither T3 unit nor bundle were
+dropped; T2 could pass without the dependency's evidence. Now raises
+ValueError naming the dangling targets. Also updated the stale
+cycle-2 pin that had locked the old accidental ValueError.
+
+**Run-dir hardening** (`driver.py`, new `_open_run_dir` +
+`RunDirError`, wired into run_exec + run_dry_run; write-time symlink
+guard in `_write_run_files`): `..` traversal, absolute-outside-cwd,
+symlink anywhere in the chain, file collision, uncreatable paths,
+non-writable dirs, symlinks planted inside the run dir, foreign
+run-receipts -> all plain exit-1 errors, never followed, never
+clobbered; same-work-order re-run allowed. 18 driver tests adjusted
+(chdir to tmp under pytest). Note: absolute --run-dir outside the
+invocation cwd is now a plain error by design (cd there first).
+
+**Recorded (design, not patch)**:
+- **R9 [HIGH]**: no authority signature on governor receipts — a
+  local file-write attacker can mint a fully-bound, freshly-sealed
+  receipt for any task under the current policy. Seal proves
+  integrity-since-sealing, not sealer identity (authority-key custody
+  still outstanding). Trust boundary = receipt dir
+  governor-writable-only, enforced outside this region.
+- **R10 [MED]**: cross-run replay undetectable — `router.decide`
+  receipts carry no `run_id`; a genuine receipt verifies in any run.
+  Needs `run_id` stamped at issuance + binding here. Pinned by a
+  documenting test asserting the replay passes.
+- R11 [LOW]: FIFO-swap TOCTOU between isfile gate and open();
+  accepted residual.
+- R12 [LOW]: `decision_hash`/`policy_hash` taken at face value, not
+  recomputed (folds into R9).
+- R9b [LOW]: `bundle_id`/`unit_id` collide when `work_order_id`
+  absent in both orders — content-derived by contract; degenerate
+  input.
+- R1-R8 (cycles 1-4) still open.
+
+**Behavior locks**: every malformed `--adapter` spec -> plain error,
+exit 1, no traceback, no run dir; `--live` without adapter -> plain
+error, never fake downgrade; import-time side effects proven to
+execute (documented, by design); within-bound boundary pinned
+exactly (spread == bound passes, bound+1 fails); duplicate member
+refs deduped deterministically; 10k refs in 0.02s; 5000-goal group
+-> 1 bundle in 0.01s.
+
+**Suite**: 817 passed + 2 skipped (chmod/read-only probes skip as
+root), 3 consecutive full runs. Battery 151/151 x3. 0 provider calls.
