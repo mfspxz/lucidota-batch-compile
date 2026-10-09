@@ -119,3 +119,43 @@ driver_test.py + runs/ untracked). Left alone.
 **Suite**: 619 passed + 2 pre-existing driver failures, 3 consecutive runs.
 Battery 3x green. Commits: cycle-2 attacks (28), fix C2-001.
 
+---
+
+## CYCLE 3 (2026-10-09)
+
+**New attacks** (not repeating cycles 1-2 or wave 5): cross-module
+property fuzz (30 seeded trials: parse -> partition -> assign -> schedule),
+64-thread reserve race + 16-thread idempotency race, kill-and-replay crash
+recovery, idempotency surviving the crash, determinism (stable
+work_order_id), double-release, sweep-noop, driver-guard edges, retry-loop
+exhaustion, prompt-registry tamper surface (version ordering, tamper,
+unknown pin, wrong sha, latest-pin), parser self-dependency/empty-group,
+envelope tamper.
+
+**150-fixture battery**: 151/151, 3x green (unchanged since cycle 1).
+
+**Confirmed defects**: NONE. Every attack held. Notable near-misses that
+turned out to be my harness bugs (code correct): govern_fn verdict needs
+{"allowed": True, "governor_receipt_ref"} (my first fuzz was vacuous --
+assertion now requires non-empty allocs); dependent goals correctly route
+to tier-2 bundles, not tier-3 units (can_standalone by design); replay
+restores seeded pool limits (accounting, not config, by design); a live
+reservation re-delivered across a crash keeps held=3 (no double-spend).
+
+**Behavior locks**: 64 threads vs limit-1 -> exactly 1 winner, held never
+exceeds 1; idempotency race -> 1 reservation; replay restores held/consumed
+exactly; idempotency index survives crash; double-release returns False
+without double-free; tampered envelope chain -> EnvelopeError; tampered
+prompt re-register rejected; wrong sha at register rejected; unknown
+prompt pin -> KeyError; self-depends-on and empty group rejected;
+RetryLoop: RETRYABLE@5 -> dead_letter, PERMANENT -> failed.
+
+**Recorded (design, not patch)**: R1-R4 still open (R1 BOM, R2 dup
+depends-on, R3 unicode digits, R4 terminal-state vocabulary unification).
+
+**Suite**: 640 passed, 0 failed, 3 consecutive full runs. The 2
+driver_laneA failures from cycle 2 are gone -- the driver lane fixed its
+own in-flight work; not touched by this cycle. Commits: cycle-3 attacks
+(19). 0 provider calls across all 3 cycles.
+
+
