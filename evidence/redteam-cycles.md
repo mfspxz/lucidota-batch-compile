@@ -698,3 +698,53 @@ ids, no dropped goals, dependents never T3, determinism).
 
 **Suite**: 985-986 passed + 3 skipped (+1 xfail: C7C-001 race),
 3 consecutive full runs green. 0 provider calls.
+
+---
+
+## CYCLE 10 (2026-10-09)
+
+**New attacks** (not repeating cycles 1-9 or wave 5): C7C-001 regression
+depth (28 tests in `redteam_cycle10_test.py`): verify under held
+exclusive lock (recovery.reanchor_suffix pattern), cross-PROCESS
+verify-during-append (subprocess appender, every verify must be
+(True,-1)), sidecar registry cleanup; driver --adapter/--provider
+matrix abuse (`sys:exit`, `os:system`, `builtins:eval`, missing
+module/class, non-callable execute, --live without adapter, 100KB /
+unicode / traversal / NUL provider labels); adversarial quota states;
+work-order rule-grammar hostiles (CR, empty, oversize, goal-like
+mid-rule, NUL); two-process prev_hash envelope chain (no fork).
+
+**C7C-001 FIXED** [MED]: `integrity.verify_chain`/`chain_info` now take
+LOCK_SH on the sidecar `<name>.lock` (same lock `append_chained` holds
+LOCK_EX on), so a racing verifier can only ever see complete lines.
+Two subtleties handled: (a) the held-lock registry is keyed by
+(thread ident, lock path) -- a process-wide registry let a verifier
+thread skip the lock while ANOTHER thread held EX, which the new
+cross-thread regression test caught before commit; (b) same-thread
+nesting (recovery.reanchor_suffix calls verify_chain while holding EX)
+skips re-locking instead of self-deadlocking (flock does not nest).
+`test_7c_verify_under_concurrent_append` xfail -> hard fail; 15/15
+green across both run conventions.
+
+**C10-001 FIXED** [MED]: `band_pause_report` and
+`QuotaGuard.utilization` divided straight through pool
+held/consumed/limit: limit=0 -> ZeroDivisionError leak; NaN held ->
+NaN utilization, which json.dumps emits as the invalid-JSON literal
+`NaN` (same corruption class as C1-001); strings -> TypeError. Now
+`_pool_numbers` detects degraded states (non-numeric, NaN/inf,
+negative held/consumed, non-positive limit) and callers fail closed:
+band guard pauses with utilization=None + explicit reason (report
+always JSON-serializes); utilization() raises plain AllocatorError.
+Huge finite ints saturate deterministically (not degraded).
+
+**Held**: adapter matrix fully held (every hostile spec -> plain
+AdapterSpecError; `sys:exit`'s SystemExit converted, never a raw
+process exit; --live without adapter -> exit 1, never silent
+dry-run); rule grammar held (CR stripped, empty/malformed/oversize
+named exactly, NUL pinned verbatim); two-process envelope chain held
+(50/50 records, unique seals, no fork).
+
+**150-fixture battery**: 151/151, 3x green (unchanged).
+
+**Suite**: 1017 passed + 3 skipped, 3 consecutive full runs green
+(C7C-001 xfail gone). 0 provider calls.
