@@ -66,3 +66,56 @@ huge attempt -> dead_letter (bounded).
 
 **Suite**: 563 passed, 3 consecutive full runs. Commits: battery (150),
 cycle-1 attacks (31), fixes C1-001/C1-002, dead-code removal.
+
+---
+
+## CYCLE 2 (2026-10-09)
+
+**New attacks** (not repeating cycle 1 or wave 5): adapter contract edges
+(6 malformed variants + mid-run raise), circular bundle dependencies,
+self-dep bundle, unknown pool refusal, reconcile-unknown silent noop,
+idempotent re-delivery (no double-spend), sweep_expired with virtual time,
+non-rpm kind refusal, t2/t3 gate edges, unknown goal type fallback, shadow
+govern-crash recording, latest_plan missing file, verify_chain bad
+signature.
+
+**150-fixture battery**: 151/151, 3x green (unchanged since cycle 1).
+
+**Confirmed defects FIXED (1)**:
+
+### C2-001 — AttemptRecord accepted any terminal_state string [MEDIUM]
+`terminal_state` was a free string field; `"GARBAGE"` was accepted
+silently. Downstream, driver.py's `== "completed"` comparisons would
+then never match, misrouting a completion as a failure (retry or
+dead-letter) with the garbage string as the "failure reason". Fix
+(worker.py): `__post_init__` validates against the closed vocabulary
+`{running, completed, failed, timeout, dead_letter, blocked}` — derived
+from all three producers (worker seal paths, driver_guards "running",
+ATTEMPT_TERMINAL values), not invented. driver_guards.apply_terminal_state
+already validated its input; the hole was only direct construction.
+
+**Behavior locks**: adapter malformations -> `adapter_malformed` failed
+(never a guess, never a crash); circular bundle deps block both, no hang;
+unknown pool -> UNAVAILABLE; reconcile unknown id -> silent idempotent
+noop; same idempotency key -> same reservation, quota spent once;
+sweep_expired frees capacity under virtual-time jump; tpm kind ->
+NO_MEASURED_EVIDENCE; govern_fn crash -> per-proposal refusal with the
+exception named (better than the crash-evidence path); unknown goal type
+-> normal unit (parser can never emit one anyway).
+
+**Recorded (design, not patch)**:
+- R4 [MED]: terminal-state vocabularies are inconsistent across layers
+  (worker AttemptRecord "completed" vs retry.TERMINAL_STATES "done" vs
+  driver_guards values vs queue states). C2-001 closed the constructor
+  hole; unifying the vocabularies is design work for the scheduler lane.
+- R1-R3 from cycle 1 still open (LOW).
+
+**Observed, not mine (do not touch)**: 2 pre-existing failures in
+driver_laneA_test.py (test_shadow_stub_exits_1, test_live_stub_exits_1:
+stub driver returns 0 where the test expects exit 1) — proven failing on
+HEAD before my change; a driver lane is in-flight (driver.py modified,
+driver_test.py + runs/ untracked). Left alone.
+
+**Suite**: 619 passed + 2 pre-existing driver failures, 3 consecutive runs.
+Battery 3x green. Commits: cycle-2 attacks (28), fix C2-001.
+
