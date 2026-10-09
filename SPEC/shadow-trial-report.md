@@ -175,3 +175,275 @@ for >=95% of dispatched tasks"; it should be updated to the restated form
 (over the dispatch-candidate intersection, per `coverage_report`'s
 docstring) before the PIPE-010 re-run. Flagged, not edited — migration
 spec text belongs to its owning lane.
+
+---
+
+# Trial 3 — 2026-10-09 ~13:45–14:28 PDT (wiring: design+fix 780f1aa)
+
+**Executor:** runbook subagent · **Windows:** `shadow-t3w1/t3w2/t3w3`
+(PIPELINE_MODE=shadow, 3 supervisor cycles each, STOPFILE-bounded, rc=0 all)
+
+**Verdict: FAIL as-measured — comparator defect, not an allocator failure.
+Predicate (b) is not met in w1 (0.870 < 0.95). The underlying allocator
+behavior meets the predicate (1.0 in all windows) once the measurement
+defect below is corrected. Do NOT advance to Phase 2 on this evidence.**
+
+## Infrastructure interruption (recorded, excluded)
+
+The first attempt (`shadow-w4`) was killed mid-window-1 by a service
+restart (~13:42 PDT): 1 orphan plan, no comparisons, /tmp wiped. Queue
+verified intact afterward (2391 rows, no stuck states). The trial was
+re-run cleanly as `shadow-t3w1..t3w3` with a resume-capable driver. The
+`shadow-w4` orphan plan is dead evidence, excluded from all numbers.
+
+## Measured numbers (as-measured, defect included)
+
+| Window | Plans | Alloc/plan | Stream/plan | Crashes | Receipts | MATCH | PLAN_UNEXECUTED | UNPLANNED_DISPATCH | Coverage† |
+|---|---|---|---|---|---|---|---|---|---|
+| shadow-t3w1 | 3 | 39 | 32 | 0 | 2667 | 47 | 46 | 2574 | 0.870 |
+| shadow-t3w2 | 3 | 39 | 32 | 0 | 2673 | 50 | 46 | 2577 | 1.000 |
+| shadow-t3w3 | 3 | 39 | 32 | 0 | 2679 | 50 | 46 | 2583 | 1.000 |
+
+† `coverage_report()` restated predicate: planned_for / dispatched_in_scope.
+
+## Acceptance status (migration 11-migration.md §4 Phase 1, restated)
+
+| Predicate | Status |
+|---|---|
+| ≥3 consecutive burn windows | **MET** — 3/3, all engines exited cleanly (rc=0) via STOPFILE |
+| Zero allocator crashes | **MET** — 0 crashes across 9 plans |
+| coverage = planned_for / dispatched_in_scope ≥ 95% per window | **NOT MET** — w1 0.870 (w2/w3 1.000) |
+| Every shadow receipt chain-verifies via `envelope.verify_chain` | **MET** — 8157/8157 (whole file) |
+
+## Structural cause: `actuals_new_tasks` known-set scope bug (new in 780f1aa)
+
+`actuals_new_tasks(prev_plan, current_records)` defines "new" as
+*task_id absent from the plan's `queued_ids` AND status terminal*.
+But the plan records `queued_ids` **capped at the top-256**, while the
+queue holds ~2400 records with ~1300 historical terminal tasks (failed /
+completed on 2026-10-08 and earlier). Every one of those historical
+tasks is misclassified as "dispatched since plan time":
+~2571–2580 of the ~2574–2583 UNPLANNED_DISPATCH receipts per window are
+tasks created **before the trial**, some a full day earlier
+(`evidence: queue-new`, `created_at` 2026-10-08). The comparator floods
+itself with ~1300 phantom dispatches per comparison.
+
+The 47–50 MATCH receipts per window are genuine: pacer-created tasks
+from the trial windows joining planned stream slots by fingerprint
+(the two-keyed stream join works as designed).
+
+**Corrected measurement** (drop UNPLANNED_DISPATCH actuals whose queue
+record `created_at` predates the window start — exactly the
+"created after plan time" contract in the function's own docstring):
+
+| Window | planned_for | dispatched_in_scope | genuine out_of_scope* | coverage |
+|---|---|---|---|---|
+| shadow-t3w1 | 47 | 47 | 3 | **1.000** |
+| shadow-t3w2 | 50 | 50 | 3 | **1.000** |
+| shadow-t3w3 | 50 | 50 | 3 | **1.000** |
+
+\* Tasks genuinely created during the window beyond the 32-slot peek
+horizon — the scope boundary reporting working as designed.
+
+Fix (for the owning lane, not applied here): the plan must record the
+**full snapshot task-id set** (not the capped top-256) and
+`actuals_new_tasks` must use it as the known set — or the function must
+be time-bounded. Note the related caveat: slot fingerprints are
+corpus-cycle positions, not unique task identities (the corpus repeats),
+so a fingerprint can join a task from yesterday; the snapshot known-set
+is what makes the join time-sound.
+
+## Provider calls + tokens (measured per window, `_counts` at engine stop)
+
+| Window | NVIDIA calls | Gemini ok/fail | Gemini rate-limited attempts | Verify (local) |
+|---|---|---|---|---|
+| t3w1 | 0 / 0 | 0 / 0 | 96 | 1 ok / 2 fail |
+| t3w2 | 0 / 0 | 0 / 0 | 103 | 1 ok / 2 fail |
+| t3w3 | 0 / 0 | 0 / 0 | 111 | 1 ok / 2 fail |
+
+- **NVIDIA: 0 calls in all windows** (trial 2: 15). The startup
+  guard-evasion race fix is confirmed working: every engine started
+  with `nvidia_paused=True` from persisted utilization, preflight
+  skipped the nvidia smoke check, zero dispatches leaked.
+- **Gemini: 0 completions, ~100 attempts/window, all adapter-bucket
+  429s** (rate_limited). 0 output tokens. The adapter bucket, not the
+  provider, remains the binding constraint.
+- Preflight: 1 gemini smoke call per engine start (not in `_counts`).
+
+## Guards
+
+- NVIDIA band guard stayed tripped throughout (pre-existing); the lane
+  initialized paused every window — no new trip, no stop warranted.
+- Budget guard otherwise nominal; no abnormal engine stops.
+
+## Hygiene observations (recorded, not fixed)
+
+- Queue grew 1082 → 1178 → 1281 → 1392 queued across the trial:
+  pacers create ~100 tasks/window, ~0 complete under rate limiting.
+- `task-99721824` duplicates stable at ×11 (was ×11 at trial start).
+- `pipeline-plans.jsonl` now holds 108 rows; receipts file 8157 rows,
+  all chain-verified.
+
+## Artifacts
+
+- Plans: `~/workspace/compute/pipeline-plans.jsonl` (9 trial-3 plans,
+  `shplan-shadow-t3w{1,2,3}-*`, prev_hash-chained)
+- Receipts: `~/workspace/compute/pipeline-shadow-receipts.jsonl`
+  (8019 trial-3 receipts, sealed)
+- Driver: `/tmp/shadow_trial3.py` · Analysis:
+  `/tmp/shadow_trial3_analyze.py` · State: `/tmp/shadow3-state.json`
+  (ephemeral)
+- Engine logs: `/tmp/shadow3-shadow-t3w{1,2,3}.log` (ephemeral)
+
+## Recommendation
+
+Do not advance to Phase 2 (canary/enforced) on this evidence. The
+allocator met the restated predicate in all three windows (1.0 after
+correction), but the trial-3 wiring ships a real comparator defect
+(`actuals_new_tasks` known-set scope bug) that makes the as-measured
+predicate fail. Fix the known set (full snapshot task ids, time-sound
+join), re-run PIPE-010, then judge the predicate on clean numbers.
+
+---
+
+# Trial 4 — 2026-10-09 ~15:26–16:00 PDT (wiring: known-set fix 809ecde)
+
+**Executor:** lane subagent · **Windows:** `shadow-t4cw1/t4cw2/t4cw3`
+(PIPELINE_MODE=shadow, 3 supervisor cycles each, STOPFILE-bounded, rc=0
+all; driver `~/workspace/compute/shadow_trial4.py`, analysis
+`~/workspace/compute/shadow_trial4_analyze.py`)
+
+**Verdict: FAIL — predicate (b) vacuous, NOT met. This is not an
+allocator failure: zero provider dispatches occurred in any window
+(total adapter-bucket rate limiting), so the dispatch-candidate
+intersection is empty and coverage is undefined. Do NOT advance to
+Phase 2 on this evidence.**
+
+## The known-set fix, complete (commits e1e4cc2 then 809ecde)
+
+Trial 3's recommendation ("record the full snapshot task-id set") was
+first implemented incompletely: `queued_ids_all` was built from
+`Q.pending()` — but `pending()` is a status-filtered SUBSET of
+`Q._load()` (~1,400–1,600 of ~2,400 records). An intermediate 3-window
+run (`shadow-t4w1..w3`, dead evidence, excluded from acceptance) still
+emitted ~2,590 phantom UNPLANNED_DISPATCH/window: pre-trial terminal
+tasks absent from the pending-only snapshot.
+
+The complete fix (809ecde): the plan now carries two exact known sets —
+`queued_ids_all` = full `Q._load()` snapshot at plan time (for
+`actuals_new_tasks`: "created after plan time" = absent here), and
+`queued_pending_ids` = uncapped pending set (for `actuals_from_queue`:
+"the plan saw as queued"). The engine passes
+`snapshot_records=Q._load()`; each reader joins precisely the set its
+contract needs. Regression test `test_snapshot_full_load_vs_pending`
+reproduces the defect at unit scale (290 pre-trial terminal tasks → 0
+phantom actuals). Suite: 1004 passed / 3 skipped in scope (another
+lane's in-flight red-team files deselected, untouched).
+
+## Measured numbers (clean — 0 phantoms)
+
+| Window | Plans | Alloc/plan | Crashes | Receipts | MATCH | PLAN_UNEXECUTED | UNPLANNED_DISPATCH | Phantoms | Coverage† |
+|---|---|---|---|---|---|---|---|---|---|
+| shadow-t4cw1 | 3 | 39 | 0 | 62 | 0 | 60 | 2 | 0 | None (vacuous) |
+| shadow-t4cw2 | 3 | 39 | 0 | 62 | 0 | 60 | 2 | 0 | None (vacuous) |
+| shadow-t4cw3 | 3 | 39 | 0 | 62 | 0 | 60 | 2 | 0 | None (vacuous) |
+
+† Restated predicate: coverage = planned_for / dispatched_in_scope;
+coverage None = no in-scope dispatches = vacuous, must NOT read as pass.
+
+The 2 UNPLANNED_DISPATCH/window are the local verify lane's own tasks
+(`lane=verify`, created+finished inside the window) — genuinely
+out-of-scope, correctly classified. The 60 PLAN_UNEXECUTED/window = 2
+comparisons × 30 unique planned units (23 backlog + 7 stream; 39 allocs
+collapse on queue duplicates; 25 of 32 stream candidates refused with
+BUDGET_EXCEEDED — the governor's real budget guard, honest behavior).
+
+## Acceptance status (migration 11-migration.md §4 Phase 1, restated)
+
+| Predicate | Status |
+|---|---|
+| ≥3 consecutive burn windows | **MET** — 3/3, rc=0 via STOPFILE |
+| Zero allocator crashes | **MET** — 0 across 9 plans |
+| coverage = planned_for / dispatched_in_scope ≥ 95% per window | **NOT MET** — None (vacuous) in all 3 windows; vacuous ≠ pass |
+| Every shadow receipt chain-verifies | **MET per segment** — all 3 chain segments verify; see chain note |
+
+## Structural cause: total provider rate limiting, not allocator behavior
+
+Engine counts at stop (`BURN ENGINE stopped counts`):
+
+| Window | NVIDIA ok/fail | Gemini ok/fail | rate_limited attempts | Verify (local) |
+|---|---|---|---|---|
+| t4cw1 | 0 / 0 | 0 / 0 | 79 | 1 ok / 2 fail |
+| t4cw2 | 0 / 0 | 0 / 0 | 82 | 1 ok / 2 fail |
+| t4cw3 | 0 / 0 | 0 / 0 | 82 | 1 ok / 2 fail |
+
+Every pacer dispatch attempt hit the adapter-bucket rate limiter; zero
+provider completions in all 6 windows run today (including the
+intermediate run: 83–130 rate-limited/window, 0 completions). Pacers
+created tasks (queue 3007 → 3269 across the run) but none dispatched,
+so `dispatched_in_scope = 0` and coverage is undefined. The shadow
+trial as designed can only measure coverage when the provider lanes
+actually dispatch.
+
+**Correction to the trial-3/trial-4-intermediate narrative:** the
+"47–50 MATCH, coverage 1.0" figures were artifactual. The MATCH tasks
+were historical records created hours before the windows
+(e.g. `2026-10-09T03:34:51Z`, `2026-10-08T20:51:09Z`) joining planned
+stream slots by slot-fingerprint collision — the corpus repeats, so a
+fingerprint is a cycle position, not a task identity. The clean run
+proves it: with the time-sound known set, phantoms = 0 and MATCH = 0.
+The trial-3 "corrected measurement" (created_at filter) reached the
+right number by a different route; the wiring fix now enforces it by
+construction.
+
+## Provider calls + tokens (measured)
+
+- **NVIDIA: 0 calls in all windows.** The startup guard-evasion race
+  fix holds: engines initialized `nvidia_paused=True` from persisted
+  utilization every window; preflight skipped the nvidia smoke check.
+- **Gemini: 0 completions, ~80 adapter-bucket 429s/window, 0 output
+  tokens.** The adapter bucket remains the binding constraint
+  (preflight: 1 gemini smoke call per engine start, not in `_counts`).
+- Budget guard otherwise nominal; NVIDIA band guard pre-tripped
+  throughout, no new trip, no stop warranted.
+
+## Chain note (shared-file hygiene, another lane)
+
+Whole-file single-chain verification is broken by an in-flight lane's
+`w-10k` experiment (~20k receipts appended to the shared
+`pipeline-shadow-receipts.jsonl` with 2 fresh GENESIS restarts
+mid-file). Every segment verifies cleanly (3/3), all 186 trial-4
+receipts sit in verified segments — no tampering, no loss. Flag for
+the campaign: test lanes must write receipts to tmp paths, never the
+shared receipts file.
+
+## Hygiene observations (recorded, not fixed)
+
+- Queue grew 3007 → 3269 (+~90/window created, ~0 completed): pacers
+  create faster than rate-limited completion. Unbounded growth at this
+  rate; needs a queue-hygiene lane.
+- `task-99721824` duplicates stable at ×11.
+- `pipeline-plans.jsonl` now holds 126 rows; receipts file 36,676
+  rows (incl. ~20k w-10k experiment rows).
+
+## Artifacts
+
+- Plans: `~/workspace/compute/pipeline-plans.jsonl` (9 trial-4 plans,
+  `shplan-shadow-t4cw{1,2,3}-*`, prev_hash-chained)
+- Receipts: `~/workspace/compute/pipeline-shadow-receipts.jsonl`
+  (186 trial-4 receipts, sealed, in verified segments)
+- Driver: `~/workspace/compute/shadow_trial4.py` · Analysis:
+  `~/workspace/compute/shadow_trial4_analyze.py` · State:
+  `~/workspace/compute/shadow_trial4_state.json` (incl. pre-window
+  queue snapshots used for the phantom check)
+- Engine logs: `~/workspace/compute/shadow4-shadow-t4cw{1,2,3}.log`
+
+## Recommendation
+
+Do not advance to Phase 2 (canary/enforced) on this evidence. The
+allocator and the measurement wiring are now clean (0 crashes, 0
+phantoms proven), but predicate (b) cannot be judged until a trial
+runs while the provider lanes actually dispatch. Next attempt needs
+either available provider quota at trial time or a synthetic-dispatch
+harness for the trial — that is a campaign-level decision, not a
+wiring fix.
