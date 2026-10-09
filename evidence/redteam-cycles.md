@@ -827,3 +827,69 @@ partitioner hostiles are clean parse errors.
 
 **Suite**: 1034 passed + 3 skipped, 3 consecutive full runs green.
 0 provider calls.
+
+---
+
+## Cycle 13 (2026-10-09 ~15:15 PDT)
+
+Priority: `driver.py` read of `record.artifact_ref` without a file-type
+check (same non-regular-file pattern as C12-001, new surface).
+
+**Method note (harness)**: a hostile in-process adapter arms a one-shot
+post-write swap by wrapping `QuotaGuard.reconcile` (the last call before
+the driver reads the artifact) during its first `execute()`. Deterministic
+-- the swap lands strictly after the worker's write AND after
+`complete_dispatch`, so the read site itself is exercised with no thread
+race. **Test-hygiene finding (R13)**: the suite runs against the
+`pipeline.*` package instances (driver.py's try/except import shim takes
+the `from pipeline import ...` branch because the parent dir is first on
+sys.path under pytest), while a test's plain `import driver_guards` gets a
+DIFFERENT module object. Patching/spying the top-level instance silently
+misses the running code. Tests must resolve the instance from the driver
+itself (`driver.driver_guards`). Recorded as design debt; not refactored
+this cycle.
+
+**C13-001 PROVEN then FIXED** [HIGH/DoS+laundering]: the driver's
+`Path(record.artifact_ref).read_text()` ran on whatever the path named.
+Proven: (a) a FIFO swapped post-write hung the whole run -- thread+join
+25s, still alive, recovered only via O_RDWR release; (b) a symlink to a
+foreign file made the driver ingest its content -- marker reached the
+tier-3 check input through a sealed run. Fix: `_read_unit_artifact()`
+refuses non-regular files (symlink, or existing non-regular -- the C12-001
+pattern; missing still raises OSError for the old empty-text path).
+Tamper fails the attempt as VERIFICATION_FAILURE; because retry-loop
+reasons are dropped on retry, the event is ALSO sealed into the run
+receipt as `tamper_events` (new receipt/report field, mirrored on
+`guard_trips`; `verify_run_receipt` unaffected).
+**C13-004 FIXED** [HIGH/DoS]: same hostile swap, persistent FIFO: the
+retried attempt's `write_bytes()` blocked forever opening the FIFO for
+writing (found via the C13-001 regression test). `run_unit` now refuses a
+non-regular target at write time as a named failed attempt with a sealed
+receipt -- never a hang.
+**C13-002 FIXED** [LOW]: `--adapter` with `--shadow`/`--dry-run` was
+silently ignored (shadow pins FakeAdapter; dry-run never dispatches) --
+now a usage error (exit 2).
+**C13-003 FIXED** [LOW]: `run_exec` with a mode parameter disagreeing
+with the parsed args ran silently confused -- now a plain error
+(EXIT_RUN_FAILED).
+
+**Held**: run-receipt foreign-sha edges -- JSON list/null/missing-sha all
+refused as foreign; matching-sha re-run still allowed (4 locking tests).
+
+**Design notes (unpatched)**: R13 (dual module instances, above);
+`dispatch_plan` hardcodes `attempt_index=0`, so retries overwrite the
+same artifact path -- attempt N's receipt `artifact_sha256` no longer
+matches the file after a retry (forensics wrinkle, no integrity break:
+receipts are content-sealed); persistent-symlink retry trips the
+pre-existing C6C-004 write-path refusal and aborts the run cleanly
+(plain error, no traceback) rather than failing the unit.
+
+**150-fixture battery**: 151/151, 3x green (unchanged).
+
+**Suite**: 1045 / 1045 / 1046 passed + 3 skipped, 3 consecutive full runs
+green (one conditional test varies collection 1048/1049; zero failures).
+0 provider calls.
+
+**Commits**: compute (driver.py: ArtifactNotRegular/_read_unit_artifact/
+tamper_events/C13-002/C13-003; worker.py: C13-004 write-side refusal;
+redteam_cycle13_test.py: 11 tests).
