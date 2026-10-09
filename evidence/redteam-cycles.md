@@ -930,3 +930,36 @@ handling; `verify_chain()` checks per envelope. Locking tests added.
 
 **Commits**: compute (partition.py: C14-001; worker.py: C14-002;
 redteam_cycle14_test.py: 9 tests).
+
+---
+
+## Cycle 15 (2026-10-09 ~16:15 PDT)
+
+**C15-001 FIXED** [MED]: shadow plans were sealed (`prev_hash`+`seal`)
+at write time, but nothing verified the chain before `compare_shadow` --
+tampering between write and compare classified silently. Added
+`verify_plan_chain()` (per-plan seal recompute + linkage check,
+fail-closed violations list) and `load_verified_plans()` (raises
+`ShadowError` on any violation): the hardened load path for compare.
+**C15-002 FIXED** [MED]: `_append_with_tail`/`_append_many_with_tail`
+opened the target with no file-type check (same class as C12-001/C13-001):
+a planted FIFO corrupts the tail read, a symlink redirects the chain.
+Now refused with `ShadowError` before open.
+**C15-003 FIXED** [MED]: `allocate._utc_now` returned `now_fn()`
+unvalidated -- a `now_fn` yielding str/int/None/naive-datetime raised raw
+`TypeError` in TTL comparisons during quota-log replay (proven x4).
+Now: non-datetime is a plain `AllocatorError` at the seam; naive is
+assumed UTC (consistent with `_iso`).
+**HELD under load**: 32 threads x 25 appends (800 records) and 4
+processes x 20 (80 records): unique seals, unforked `prev_hash` chains --
+the advisory flock serializes across processes; a raising build callback
+releases the lock with no partial line; a torn tail still chains onto
+the last good seal.
+
+**150-fixture battery**: 151/151, 3x green (unchanged).
+
+**Suite**: 1067 passed + 3 skipped, 3 consecutive full runs green.
+0 provider calls.
+
+**Commits**: compute (shadow.py: C15-001/C15-002; allocate.py: C15-003;
+redteam_cycle15_test.py: 12 tests).
