@@ -893,3 +893,40 @@ green (one conditional test varies collection 1048/1049; zero failures).
 **Commits**: compute (driver.py: ArtifactNotRegular/_read_unit_artifact/
 tamper_events/C13-002/C13-003; worker.py: C13-004 write-side refusal;
 redteam_cycle13_test.py: 11 tests).
+
+---
+
+## Cycle 14 (2026-10-09 ~15:45 PDT)
+
+**C14-001 FIXED** [MED]: `partition._resolve_goal_type` raised a raw
+`TypeError: unhashable type` for dict/list type ids out of the registry
+dict lookup (proven pre-fix). Now fail-closed atomic for any non-string
+id. Manifest registry hardened in the same edit: only a real `True`
+permits subdivision -- the old `bool(...)` coercion made the *string*
+`"false"` (and `"yes"`, `1`) enable subdivision; malformed registry
+shapes (non-list registry, non-dict entries) now fall through to the
+module registry / atomic instead of raising `AttributeError`.
+**C14-002 FIXED** [MED]: `worker.t1_envelope` accepted non-string
+`full_checklist` items; the driver's evidence-binding dict comprehension
+then raised raw `TypeError: unhashable type: 'dict'` (proven pre-fix).
+Now a named `WorkerError` at envelope construction.
+**HELD -- dev-rule injection**: structurally impossible. Envelopes carry
+ref NAMES (`context_refs`, `shared_context_refs`) only; nothing resolves
+`development_rules` content into the prompt path. Proven end-to-end: a
+work order with prompt-injection text in its dev rules partitions and
+builds a prompt with the hostile marker absent and the pinned prompt
+text intact. Design note: dev-rule content is currently inert for
+workers; anyone who later "resolves" it into prompts reopens this
+surface -- the test guards the boundary.
+**HELD -- envelope v1/v2 interop**: no v2 implementation exists anywhere
+(v2 is doctrine-only). `envelope.verify()` pins `lucidota-receipt/1` and
+rejects foreign `env` versions with `EnvelopeError` *before* signature
+handling; `verify_chain()` checks per envelope. Locking tests added.
+
+**150-fixture battery**: 151/151, 3x green (unchanged).
+
+**Suite**: 1055 passed + 3 skipped, 3 consecutive full runs green.
+0 provider calls.
+
+**Commits**: compute (partition.py: C14-001; worker.py: C14-002;
+redteam_cycle14_test.py: 9 tests).
