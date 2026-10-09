@@ -163,5 +163,15 @@ Demo evidence: `~/workspace/compute/pipeline/demo_e2e_test.py` (147/147 green, 0
 
 ## Suite + diff verification
 
-- Full pipeline suite: `cd ~/workspace/compute/pipeline && python3 -m pytest -q` — green (see below).
-- §20 edit: diff shows additions only (see below).
+- Full pipeline suite: `cd ~/workspace/compute/pipeline && python3 -m pytest -q`
+  → **156 passed** (2026-10-09). Suite stays green; no pipeline code was
+  modified (read-only lane).
+- §20 edit: verified additive — the base §20 table (03-schemas.md:671-686)
+  and the §20 Compatibility line are byte-identical to before the edit; the
+  new "§20 ADDENDUM — batch-1 concrete check-result profile (ADDITIVE)"
+  subsection was inserted after the Compatibility line, before "## 21.".
+  No existing §20 text was modified, rewritten, or removed.
+- Commit: `~/workspace/batch-compile` was not previously a git repo; a repo
+  was initialized there and `SPEC/03-schemas.md` + `SPEC/conformance-lanes2-4.md`
+  committed selectively (commit `94090b2`). No other files staged; no git
+  history exists outside this repo. No forbidden git ops were used.
