@@ -748,3 +748,46 @@ named exactly, NUL pinned verbatim); two-process envelope chain held
 
 **Suite**: 1017 passed + 3 skipped, 3 consecutive full runs green
 (C7C-001 xfail gone). 0 provider calls.
+
+---
+
+## CYCLE 11 (2026-10-09)
+
+**New attacks** (not repeating cycles 1-10 or wave 5): deepseek pool
+exhaustion under 32 concurrent live-run reservers (6-wide pool:
+exactly 6 reservations, 26 clean BUDGET_EXCEEDED, reconcile ->
+consumed==6, kill-and-replay rebuilds exact accounting;
+release-recycle exactness); falsification chain under SIGKILL
+mid-append x5 timings (torn tail must NEVER verify TRUE; torn ->
+(False, torn_lineno), clean prefix -> (True,-1), chain_info never
+raises); shadow comparator 10k scale; receipt old-schema migration
+(read-only: envelope.py out of lane write scope).
+
+**C11-001 FIXED** [PERF]: `compare_shadow` sealed one receipt per
+classified task with a full tail-read + fsync each -> O(n^2) I/O
+(measured: 500 receipts 1.18s, 1000 3.95s, 2000 15.77s, 10k projected
+>400s; the 10k probe hung the suite >6min before being killed).
+Cycle 9 had recorded this as R22 "fine for Phase-1 volumes"; this
+cycle supersedes R22. Fix: new `_append_many_with_tail` seals the
+whole batch in ONE locked critical section (tail read once, prev ->
+seal chained through the batch in order, single write + fsync).
+Chain/fork-freedom properties identical to the per-receipt loop
+(lock held across the batch is strictly stronger serialization);
+`test_11c_batch_equivalence` proves byte-identical seals vs the old
+loop on the same inputs and chain-verifies both. 10k now completes
+in seconds (test budget 30s).
+
+**Held**: pool exhaustion exact under 32-way concurrency (no
+double-spend, replay exact); SIGKILL wreckage always fails closed
+at the torn line; old-schema receipts fail closed
+("unsupported env version", never silently migrated); post-wrap
+field injection fails closed (sig/seal bind the field set);
+mixed-version chains fail naming the index.
+
+**150-fixture battery**: 151/151, 3x green (unchanged).
+
+**Suite**: 1025 passed + 3 skipped, 3 consecutive full runs green.
+(The first 3x attempt caught a real bug in the C11-001 fix itself --
+a dropped `chunks.append(b)` re-anchored every batch at GENESIS;
+caught by shadow_test + redteam_cycle4c, fixed, equivalence test
+strengthened to cover multi-batch chaining.) 0 provider calls.
