@@ -566,3 +566,72 @@ legacy-prefix tamper detected via genesis anchor.
 
 **Suite**: 953 passed + 3 skipped, 3 consecutive full runs green
 (1 xfail: C7C-001 race, intermittent). 0 provider calls.
+
+---
+
+## CYCLE 8 (2026-10-09)
+
+**New attacks** (not repeating cycles 1-7 or wave 5): DeepSeek adapter
+hostile inputs (5MB prompt cost bomb, cap boundary exact/+1, hostile
+envelope shapes, NaN pacing clock, empty-success lock); provider/pool
+wiring (mismatch, alias normalization, unknown provider, override
+plan); quota crash-recovery (kill with in-flight deepseek reservations,
+torn tail, 7 byzantine log lines, double replay, expired-at-replay).
+Worktree/tree-edit patch validation: NO code in pipeline/ (lives in
+the organelle factory, out of scope) -- no attacks, not a gap in this
+repo.
+
+**Confirmed defects FIXED (4)**:
+
+### C8E-001 — live dispatch spent the wrong provider's quota [MED]
+`run_exec` hardcoded `provider=None` at the quota guard, so the
+`--provider` override never reached pool resolution: a --live DeepSeek
+run silently spent the NVIDIA tier pool's quota while calling DeepSeek's
+API. Compounded by no DeepSeek pool being seeded at all. Now: canonical
+provider namespace (`PROVIDER_CANON`: "gemini-direct"->"gemini" etc.),
+`pool_for` normalizes and fails closed on mismatch, the driver passes
+the effective provider (--provider wins, else the adapter's
+`provider_id`), --provider builds a real override plan, and the
+deepseek pool is seeded (limit 6, provenance "adapter-policy",
+mirroring the adapter's own <=6 RPM pacing). Bare adapter/plan
+mismatches now abort loudly instead of misaccounting.
+
+### DS-1 — unbounded prompt_text cost bomb [MED]
+No prompt-length guard: a multi-MB prompt_text was sent to the provider
+unbounded. Now fail-closed at MAX_PROMPT_CHARS (256K) via AdapterError,
+before any provider call. Covers both adapters (shared _build_prompt).
+
+### DS-2 — _build_prompt raw escapes [LOW]
+Unserializable scope / non-dict envelope leaked raw TypeError /
+AttributeError instead of the adapter contract's AdapterError
+(worker.py contained them as named attempts, but the contract was
+violated). Now AdapterError with the cause named.
+
+### DS-3 — _pace fail-open on NaN clock [LOW]
+NaN wait skipped the sleep. Now holds the full interval (fail-closed).
+Gemini's pacing lives in adapters/gemini.py (out of scope) -- not
+checked.
+
+**Recorded (design, not patch)**:
+- R20: `_read_text` honors any `raw_output_ref` path from the ex dict.
+  Production ex dicts are adapter-built from uuid paths; the only other
+  source is the test-only `_generate` seam. Tightening would break the
+  seam contract; contain refs to ADAPTERS_DIR/raw if ex ever goes
+  untrusted.
+- R21: replay_log silently ignores terminal events for unknown
+  reservation ids (defensible: idempotent terminals; the log's threat
+  model is crashes, not adversarial writers).
+- Bare `--live --adapter X` with no --provider now aborts on
+  provider/plan mismatch (loud, by design) -- pass --provider explicitly.
+
+**Behavior locks**: prompt cap exact-boundary pinned; empty-success
+still refused (CoT guard intact); alias "gemini-direct"->gemini,
+"nvidia-nim"->nvidia; unknown provider fails closed; kill-and-replay
+restores exact held/consumed; torn tail skipped + anomaly; double replay
+is a no-op; expired-at-replay never re-held; idempotency index rebuilt
+across crashes.
+
+**150-fixture battery**: 151/151, 3x green (unchanged).
+
+**Suite**: 968-969 passed + 3 skipped (+1 xfail: C7C-001 race),
+3 consecutive full runs green. 0 provider calls.
