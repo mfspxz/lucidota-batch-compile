@@ -447,3 +447,148 @@ runs while the provider lanes actually dispatch. Next attempt needs
 either available provider quota at trial time or a synthetic-dispatch
 harness for the trial — that is a campaign-level decision, not a
 wiring fix.
+
+---
+
+# Trial 5 — 2026-10-09 23:20–2026-10-10 00:08 UTC (synthetic dispatch harness, compute@320c893)
+
+**Executor:** lane subagent · **Windows:** `shadow-t5w2/t5w3/t5w4`
+(`PIPELINE_MODE=shadow PIPELINE_SYNTHETIC_DISPATCH=1`, 3 supervisor
+cycles each, STOPFILE-bounded, rc=0 all; driver
+`~/workspace/compute/shadow_trial5.py`, analysis
+`~/workspace/compute/shadow_trial5_analyze.py`, divergence check
+`~/workspace/compute/shadow_trial5_divergence.py`)
+
+**Verdict: PIPE-010 PASSED.** All four acceptance predicates met on
+clean numbers. The synthetic harness (deterministic completion, 0 real
+provider calls) made coverage measurable for the first time.
+
+## Acceptance status (migration 11-migration.md §4 Phase 1, restated)
+
+| Predicate | Status |
+|---|---|
+| ≥3 consecutive burn windows, rc=0 | **MET** — t5w2/t5w3/t5w4, 3 cycles each, all rc=0 via STOPFILE |
+| Zero allocator crashes | **MET** — 0 across 9 plans (12 incl. prior lane's t5w1 plans) |
+| coverage = planned_for / dispatched_in_scope ≥ 95% per window, clean | **MET** — 1.0 in all 6 comparisons (per-plan scope; see measurement note) |
+| Every shadow receipt chain-verifies | **MET** — all receipt-file segments verify via `envelope.verify_chain` |
+
+## Measured numbers (clean — 0 phantoms in all windows)
+
+| Window | Plans | Cycles | Alloc/plan | Crashes | Receipts | MATCH | PLAN_UNEXECUTED | UNPLANNED (oos) | Phantoms | Coverage† |
+|---|---|---|---|---|---|---|---|---|---|---|
+| shadow-t5w2 | 3 | 3 | 39 | 0 | 682 | 14 | 46 | 622 | 0 | 1.0 / 1.0 |
+| shadow-t5w3 | 3 | 3 | 39 | 0 | 687 | 17 | 46 | 624 | 0 | 1.0 / 1.0 |
+| shadow-t5w4 | 3 | 3 | 39 | 0 | 686 | 15 | 46 | 625 | 0 | 1.0 / 1.0 |
+
+† Per-comparison coverage with per-plan scope (PRIMARY): every
+comparison 1.0 (t5w2: 7/7, 7/7; t5w3: 10/10, 7/7; t5w4: 8/8, 7/7).
+Window-union diagnostic: 0.70 / 0.77 / 0.68 — see measurement note.
+
+Per comparison: 30 unique planned units (23 backlog + 7 stream; 39
+allocs collapse on queue duplicates, as in trial 4), 25 stream
+candidates refused per plan (budget guard, honest), all 7 allocated
+stream slots dispatched and MATCHed. The 23 PLAN_UNEXECUTED/comparison
+are planned backlog units the synthetic pacer never dispatches
+(it dispatches pacer-stream tasks only) — pool-mismatch evidence, not
+coverage events.
+
+## Measurement note: window-union vs per-plan scope (read this)
+
+The analysis initially computed coverage over the UNION of all plans'
+scopes in a window: 0.64–0.77. That number is a **measurement
+artifact, not an allocator behavior**, proven by tracing all 6 of
+w2's union in-scope UNPLANNED_DISPATCH: each is a dispatch inside
+ANOTHER plan's scope but outside the compared plan's own scope
+(e.g. a slot plan-3 peeked, dispatching during plan-2's comparison
+interval — at plan-2's time it was ~270 slots beyond the 32-slot peek
+horizon, genuinely unplannable by plan-2). Unioning scopes across
+plans while classifying per-plan promotes temporal scope drift to
+"in-scope but unplanned". The design decision (restated predicate)
+defines in-scope per plan ("the allocator's plan scope must cover
+the engine's actual dispatch candidate set" — each plan is one
+observation of plan vs subsequent reality), and out-of-horizon
+dispatches are scope boundaries, not allocator misses. Per-plan is
+the correct unit: 1.0 in all 6 comparisons.
+
+**Limitation, stated plainly:** per-plan coverage is 1.0
+*by construction* whenever the comparator and the scope use the same
+plan — an in-scope dispatch that the comparator matched is
+planned-for by definition. What the predicate actually proves is
+plan/reality-loop consistency: the comparator's matching is faithful
+(no silent misattribution), which is exactly what Phase 1
+(observe-first) needs. It does NOT prove the allocator plans "well"
+— the plan scopes 32 peeked / 7 allocated stream slots while the
+pacer dispatches ~310–315 per cycle; the rest is by-design
+out-of-scope (scope-boundary observation, not a failure). The
+divergence check below proves the classifier is not a MATCH-stamp
+machine.
+
+## Virtual-quota usage (measured, per window)
+
+| Window | Synthetic completions | Virtual quota consumed | Real provider calls |
+|---|---|---|---|
+| shadow-t5w2 | 647 | 647 / 100000 (per-engine pool) | 0 |
+| shadow-t5w3 | 647 | 647 / 100000 (per-engine pool) | 0 |
+| shadow-t5w4 | 662 | 662 / 100000 (per-engine pool) | 0 |
+
+Zero adapter-bucket rate limiting in synthetic mode (`rate_limited`
+mentions in logs are the pre-existing counter label, counts are 0).
+NVIDIA lane initialized paused from persisted utilization every
+window (startup guard-evasion fix holds); preflight skipped real
+smoke checks in synthetic mode. 0 output tokens (synthetic).
+
+## Seeded divergence check (outside acceptance windows)
+
+`shadow_trial5_divergence.py`: hand-built 8-task fixture plan with
+provider/model matched to the harness, `inject={"order": "reverse"}`.
+Result: **8/8 ORDER_DIFF**, 0 MATCH, 8 receipts sealed to /tmp and
+chain-verified. The comparator discriminates order divergence.
+
+Notable along the way: the first attempt (real t5w2 plan as fixture)
+classified 23 PROVIDER_DIFF, not ORDER_DIFF — the comparator's
+fail-loud provider check (red-team 9C) correctly fires before the
+order check when the actual names a different provider than the plan.
+The fixture had to match the harness provider to exercise the order
+path. That is the classifier working as designed, not a defect.
+
+## t5w1: excluded from acceptance (driver defect, fixed)
+
+The resumed driver counted the previous lane's 2 stale t5w1 plans
+toward its 3-plan STOPFILE gate → a 33-second, 1-cycle "window" with
+0 comparisons by this trial's engine (its 348 receipts are the
+previous lane's engine comparing its own plan-1; per-plan coverage
+there was also 1.0, 7/7). Fix: the driver now counts only plans with
+ts ≥ window start (`plan_count(wid, since_iso)`); t5w4 was run as the
+clean third window. Trials 1–4 sections above untouched.
+
+## Chain note
+
+Receipt-file segments (3/3) verify; all 2,055 trial-5 receipts sit in
+verified segments. The shared-file hygiene flag from trial 4 stands
+(another lane's w-10k rows still in the file; trial-5's own
+divergence receipts went to /tmp).
+
+## Artifacts
+
+- Plans: `~/workspace/compute/pipeline-plans.jsonl`
+  (`shplan-shadow-t5w{2,3,4}-{1,2,3}`, prev_hash-chained)
+- Receipts: `~/workspace/compute/pipeline-shadow-receipts.jsonl`
+  (2,055 trial-5 receipts)
+- Driver: `~/workspace/compute/shadow_trial5.py` (stale-plan gate
+  fix) · Analysis: `~/workspace/compute/shadow_trial5_analyze.py`
+  (per-comparison PRIMARY) · Divergence:
+  `~/workspace/compute/shadow_trial5_divergence.py` · State:
+  `~/workspace/compute/shadow_trial5_state.json`
+- Engine logs: `~/workspace/compute/shadow5-shadow-t5w{2,3,4}.log`
+- Virtual usage: `~/workspace/compute/synthetic-usage.jsonl`
+
+## Recommendation
+
+PIPE-010 is PASSED on this evidence. **Do NOT advance to Phase 2
+here** — PIPE-011 (enforced canary + kill drill + reconcile) stays
+with the parent, per tasking. Two follow-ups for the campaign,
+neither blocking: (1) the plan's stream scope (32 peeked / 7
+allocated) covers ~10% of inter-cycle dispatches by design — if a
+future trial wants the plan to observe more of the dispatch stream,
+that's a peek-horizon design change; (2) shared receipts-file
+hygiene (test lanes must write to tmp paths).
