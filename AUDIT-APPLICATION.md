@@ -175,8 +175,7 @@ No code, SPEC, evidence, WORK-LOG, or backlog edits were made. This `AUDIT-APPLI
 
 ## Commits
 
-- Prior repo HEAD: `TBD`
-- Commit for this document: `TBD`
+- Commit for this document: `b0352f1` (brutal-audit: R-1..R-12 application pass, docs-only repo)
 - Other commits today: none
 
 ---
