@@ -1,3 +1,0 @@
-{"envelope_id": "wre-355b79c646c9", "mode": "shadow", "model": "nvidia-nim", "provider": "nvidia", "task_id": "task-1563e75766af", "tier": 3, "unit_ref": "t3-7fe75db89e04", "would_dispatch": true}
-{"envelope_id": "wre-d408daadf99e", "mode": "shadow", "model": "nvidia-nim", "provider": "nvidia", "task_id": "task-2493fb77e938", "tier": 2, "unit_ref": "t2-dcc30bb1fce0", "would_dispatch": true}
-{"envelope_id": "wre-47c62336d353", "mode": "shadow", "model": "gemini-direct", "provider": "gemini", "task_id": "task-4cb5bde0bddb", "tier": 1, "unit_ref": "was-9a6e3bee2996", "would_dispatch": true}

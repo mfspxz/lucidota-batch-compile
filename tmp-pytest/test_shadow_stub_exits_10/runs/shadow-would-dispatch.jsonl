@@ -1,9 +1,0 @@
-{"envelope_id": "wre-41cf900283f4", "mode": "shadow", "model": "nvidia-nim", "provider": "nvidia", "task_id": "task-eea21166a8a8", "tier": 3, "unit_ref": "t3-d5ac1c045cf2", "would_dispatch": true}
-{"envelope_id": "wre-216c99f8724d", "mode": "shadow", "model": "nvidia-nim", "provider": "nvidia", "task_id": "task-1b9453b55211", "tier": 2, "unit_ref": "t2-92d6354e0e66", "would_dispatch": true}
-{"envelope_id": "wre-22a3834b1665", "mode": "shadow", "model": "nvidia-nim", "provider": "nvidia", "task_id": "task-22329cbd2147", "tier": 2, "unit_ref": "t2-3f4b8a76fab6", "would_dispatch": true}
-{"envelope_id": "wre-931ccd4cb79d", "mode": "shadow", "model": "nvidia-nim", "provider": "nvidia", "task_id": "task-44c5b53ca1c6", "tier": 2, "unit_ref": "t2-ad8b19c0adec", "would_dispatch": true}
-{"envelope_id": "wre-6bb37ebcd74f", "mode": "shadow", "model": "nvidia-nim", "provider": "nvidia", "task_id": "task-5f84422067e6", "tier": 2, "unit_ref": "t2-a2b2bc966574", "would_dispatch": true}
-{"envelope_id": "wre-02b3b855ebd3", "mode": "shadow", "model": "nvidia-nim", "provider": "nvidia", "task_id": "task-7c19414b0a86", "tier": 2, "unit_ref": "t2-8b2e97c6220f", "would_dispatch": true}
-{"envelope_id": "wre-e581a86ac1dc", "mode": "shadow", "model": "nvidia-nim", "provider": "nvidia", "task_id": "task-889a20b7fc49", "tier": 2, "unit_ref": "t2-657966b4bafa", "would_dispatch": true}
-{"envelope_id": "wre-ba7238070a59", "mode": "shadow", "model": "nvidia-nim", "provider": "nvidia", "task_id": "task-ac45fe36c306", "tier": 2, "unit_ref": "t2-31acf6e2f76a", "would_dispatch": true}
-{"envelope_id": "wre-3c9f518dc99f", "mode": "shadow", "model": "gemini-direct", "provider": "gemini", "task_id": "task-5547c8b711b2", "tier": 1, "unit_ref": "was-73bac669a6e3", "would_dispatch": true}

@@ -1,4 +1,0 @@
-{"event":"dispatched","task_id":"t-001","source":"nvidia","at":"2026-10-09T12:01:00Z"}
-{"event":"completed","task_id":"t-001","source":"nvidia","at":"2026-10-09T12:02:00Z"}
-not json
-{"event":"dispatched","task_id":"t-002","source":"gemini","at":"2026-10-09T11:59:00Z"}

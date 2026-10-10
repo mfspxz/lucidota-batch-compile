@@ -1,4 +1,0 @@
-{"event": "reserved", "pool_id": "pool-e2a53e200410", "units": 2}
-{"event": "reserved", "reservation_id": "r2", "pool_id": "pool-e2a53e200410", "units": "3"}
-{"event": "reserved", "reservation_id": "r3", "pool_id": "pool-e2a53e200410", "units": true}
-{"attempt_id":"a","event":"reserved","expires_ts":"2026-01-01T00:02:00Z","idempotency_key":"","pool_id":"pool-e2a53e200410","reservation_id":"rsv-ok","schema":"lucidota-sched/1#quota-reservation","state":"reserved","task_id":"t","units":4}

@@ -1,2 +1,0 @@
-{"attempt_id":"run-20261009T204940Z-3d21becc-a1","event":"reserved","expires_ts":"2026-10-09T20:51:40.561009Z","idempotency_key":"idem-f557f8daa09693ec","pool_id":"pool-e2a53e200410","reservation_id":"rsv-e5dfeffe4002","schema":"lucidota-sched/1#quota-reservation","state":"reserved","task_id":"task-babdd23ea6e8","units":1}
-{"actual_units":1,"event":"consumed","reservation_id":"rsv-e5dfeffe4002"}

@@ -1,1 +1,0 @@
-{"ts": "2026-10-09T20:49:35Z", "envelope_id": "env-1", "tier": 3, "provider": "gemini-direct", "model": "gemini-3.8-flash", "status": "success", "prompt_tokens": 40, "output_tokens": 8, "latency_ms": 900, "elapsed_s": 0.0, "execution_id": "exec-9"}

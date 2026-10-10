@@ -1,4 +1,0 @@
-{"attempt_id":"","event":"reserved","expires_ts":"2026-10-09T00:02:00Z","idempotency_key":"k1","pool_id":"pool-e2a53e200410","reservation_id":"rsv-e87201dded13","schema":"lucidota-sched/1#quota-reservation","state":"reserved","task_id":"t1","units":3}
-{"attempt_id":"","event":"reserved","expires_ts":"2026-10-09T00:02:00Z","idempotency_key":"","pool_id":"pool-e2a53e200410","reservation_id":"rsv-435241b7d320","schema":"lucidota-sched/1#quota-reservation","state":"reserved","task_id":"t2","units":2}
-{"actual_units":3,"event":"consumed","reservation_id":"rsv-e87201dded13"}
-{"event":"released","reservation_id":"rsv-435241b7d320"}

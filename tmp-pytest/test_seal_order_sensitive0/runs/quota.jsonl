@@ -1,6 +1,0 @@
-{"attempt_id":"run-20261009T204935Z-5c1d61c4-a1","event":"reserved","expires_ts":"2026-10-09T20:51:35.042162Z","idempotency_key":"idem-816adf8863e78e37","pool_id":"pool-e2a53e200410","reservation_id":"rsv-84b04fa7907a","schema":"lucidota-sched/1#quota-reservation","state":"reserved","task_id":"task-1563e75766af","units":1}
-{"actual_units":1,"event":"consumed","reservation_id":"rsv-84b04fa7907a"}
-{"attempt_id":"run-20261009T204935Z-5c1d61c4-a1","event":"reserved","expires_ts":"2026-10-09T20:51:35.084780Z","idempotency_key":"idem-54e795f9ee004552","pool_id":"pool-e2a53e200410","reservation_id":"rsv-96132cc2933f","schema":"lucidota-sched/1#quota-reservation","state":"reserved","task_id":"task-2493fb77e938","units":1}
-{"actual_units":1,"event":"consumed","reservation_id":"rsv-96132cc2933f"}
-{"attempt_id":"run-20261009T204935Z-5c1d61c4-a1","event":"reserved","expires_ts":"2026-10-09T20:51:35.111873Z","idempotency_key":"idem-f6d9af03f0e6e5c7","pool_id":"pool-0dd5380ddb3b","reservation_id":"rsv-ffdb0b71a90e","schema":"lucidota-sched/1#quota-reservation","state":"reserved","task_id":"task-4cb5bde0bddb","units":1}
-{"actual_units":1,"event":"consumed","reservation_id":"rsv-ffdb0b71a90e"}

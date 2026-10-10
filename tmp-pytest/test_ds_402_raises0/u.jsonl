@@ -1,1 +1,0 @@
-{"ts": "2026-10-09T20:49:35Z", "envelope_id": "env-1", "tier": 3, "provider": "deepseek", "model": "deepseek-flash", "status": "payment_required", "prompt_tokens": null, "output_tokens": null, "reasoning_tokens": null, "latency_ms": 50, "elapsed_s": 0.0, "execution_id": "e"}

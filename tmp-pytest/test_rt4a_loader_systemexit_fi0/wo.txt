@@ -1,7 +1,0 @@
-Objective: Probe the adapter surface.
-
-Development rules:
-- Keep it simple.
-
-Goal 1 [implement]: Probe the adapter surface.
-Done-When: probe completes

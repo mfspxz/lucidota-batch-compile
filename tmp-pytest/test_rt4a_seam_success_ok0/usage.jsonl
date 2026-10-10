@@ -1,1 +1,0 @@
-{"ts": "2026-10-09T20:49:40Z", "envelope_id": "env-rt4a", "tier": 3, "provider": "gemini-direct", "model": "gemini-3.8-flash", "status": "success", "prompt_tokens": 10, "output_tokens": 5, "latency_ms": 42, "elapsed_s": 0.0, "execution_id": "ex-rt4a"}
