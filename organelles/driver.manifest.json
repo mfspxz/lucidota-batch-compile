@@ -1,0 +1,83 @@
+{
+  "authority": {
+    "declared_valence": "candidate",
+    "granted_capabilities": [
+      "batch-compile.driver:live"
+    ],
+    "mutation_class": "external_effect",
+    "required_capability": null
+  },
+  "codon": "bd",
+  "contracts": [
+    {
+      "description": "Plan only: parse -> partition -> plan, no dispatch, no provider calls, no quota spend",
+      "input_schema": {
+        "properties": {
+          "work_order": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "work_order"
+        ],
+        "type": "object"
+      },
+      "mutation_class": "read_only",
+      "op": "dry_run"
+    },
+    {
+      "description": "Full dispatch loop through the fake adapter (0 provider calls); writes shadow plan + sealed run receipt",
+      "input_schema": {
+        "properties": {
+          "run_dir": {
+            "type": "string"
+          },
+          "work_order": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "work_order"
+        ],
+        "type": "object"
+      },
+      "mutation_class": "read_only",
+      "op": "shadow_run"
+    },
+    {
+      "description": "Full live dispatch through an injected provider adapter (REAL quota spend)",
+      "input_schema": {
+        "properties": {
+          "adapter": {
+            "type": "string"
+          },
+          "run_dir": {
+            "type": "string"
+          },
+          "work_order": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "work_order"
+        ],
+        "type": "object"
+      },
+      "mutation_class": "external_effect",
+      "op": "live_run",
+      "required_capability": "batch-compile.driver:live"
+    }
+  ],
+  "description": "Batch-compile mission driver: executes work orders through compute/pipeline (dry/shadow/live).",
+  "name": "batch-compile-driver",
+  "receipt_policy": {
+    "algorithm": "sha256",
+    "chain": true,
+    "content_addressed": true
+  },
+  "schema_version": "1",
+  "transports": [
+    "unix_socket"
+  ],
+  "version": "1.0.0"
+}

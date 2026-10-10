@@ -33,7 +33,7 @@
     "policy": "subprocess-only"
   },
   "repo": "batch-compile",
-  "repo_head": "c2a22fac0e4980590b7f76b9f448178e029c19ba",
+  "repo_head": "363084435edf3044d90d83e02ef114b0bb471586",
   "resource_envelope": {
     "cpu_cores": 2,
     "io_mb": 512,
@@ -46,5 +46,12 @@
     "note": "capability names only in manifests; secret values never in env, logs, receipts, or manifests",
     "policy": "vault-ref-only"
   },
-  "tier": "B"
+  "tier": "B",
+  "units": {
+    "batch-compile-driver": {
+      "codon": "bd",
+      "note": "computation lives in compute/pipeline; cwd forced to ~/workspace/compute for module invocation",
+      "wall_time_secs": 900
+    }
+  }
 }
