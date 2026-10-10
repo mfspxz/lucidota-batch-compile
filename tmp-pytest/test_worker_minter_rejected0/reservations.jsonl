@@ -1,0 +1,1 @@
+{"decided_at":"2026-01-01T00:00:00Z","detail":"minter='worker-7' is not the quota coordinator","event":"refused","pool_id":"pool-test-0pool-test-0pool-test-0pool-test-0pool-test-0pool-test-0pool-test-0pool-test-0pool-test-0pool-test-0pool-test-0pool-test-0","reason_code":"AUTHORITY_VIOLATION","refused":true,"task_id":"t1"}

@@ -1,0 +1,188 @@
+{
+  "aborted": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "attempt_receipt": {
+        "artifact_ref": "",
+        "artifact_sha256": "",
+        "attempt": 0,
+        "attempt_id": "att-6de8c8dc089c",
+        "dispatch_receipt": null,
+        "envelope_id": "wre-355b79c646c9",
+        "envelope_sha256": "37b53c6b9fab85eceff2ee98f973152dc2bc592e6350b7460ef5483a7bb2f498",
+        "failure_reason": "adapter_exception: RuntimeError: fake adapter failure (synthetic)",
+        "prompt_ref": {
+          "prompt_id": "default-tier-rules",
+          "sha256": "18c3dbd60c99757891d0a248b96480e2295280b69a3708e7b736eaea8e231304",
+          "version": "1"
+        },
+        "receipt_id": "wrc-6845a70c6edb",
+        "recorded_at": "2026-10-09T20:49:34.550336+00:00",
+        "schema": "lucidota-sched/1#worker-attempt-receipt",
+        "task_id": "task-1563e75766af",
+        "terminal_state": "failed",
+        "tier": 3
+      },
+      "failure_reason": "adapter_exception: RuntimeError: fake adapter failure (synthetic)",
+      "receipt_digest": "96332f083e8a6004bf7273143f180a89b568579f67404f707adc5e305fb16026",
+      "receipt_id": "wrc-6845a70c6edb",
+      "task_id": "task-1563e75766af",
+      "terminal_state": "failed",
+      "tier": 3
+    },
+    {
+      "attempt": 2,
+      "attempt_receipt": {
+        "artifact_ref": "",
+        "artifact_sha256": "",
+        "attempt": 0,
+        "attempt_id": "att-6de8c8dc089c",
+        "dispatch_receipt": null,
+        "envelope_id": "wre-355b79c646c9",
+        "envelope_sha256": "37b53c6b9fab85eceff2ee98f973152dc2bc592e6350b7460ef5483a7bb2f498",
+        "failure_reason": "adapter_exception: RuntimeError: fake adapter failure (synthetic)",
+        "prompt_ref": {
+          "prompt_id": "default-tier-rules",
+          "sha256": "18c3dbd60c99757891d0a248b96480e2295280b69a3708e7b736eaea8e231304",
+          "version": "1"
+        },
+        "receipt_id": "wrc-6845a70c6edb",
+        "recorded_at": "2026-10-09T20:49:34.593958+00:00",
+        "schema": "lucidota-sched/1#worker-attempt-receipt",
+        "task_id": "task-1563e75766af",
+        "terminal_state": "failed",
+        "tier": 3
+      },
+      "failure_reason": "adapter_exception: RuntimeError: fake adapter failure (synthetic)",
+      "receipt_digest": "6b5712f60f7f04913c40b2923e4b44545b58b0790753b2192a915e57e644a2b2",
+      "receipt_id": "wrc-6845a70c6edb",
+      "task_id": "task-1563e75766af",
+      "terminal_state": "failed",
+      "tier": 3
+    },
+    {
+      "attempt": 1,
+      "attempt_receipt": {
+        "artifact_ref": "",
+        "artifact_sha256": "",
+        "attempt": 0,
+        "attempt_id": "att-21c505ba482e",
+        "dispatch_receipt": null,
+        "envelope_id": "wre-d408daadf99e",
+        "envelope_sha256": "e3aee04051b7c9575ad886973afcd7b9a5e45d8989a89718f08d3025d1a3e63a",
+        "failure_reason": "adapter_exception: RuntimeError: fake adapter failure (synthetic)",
+        "prompt_ref": {
+          "prompt_id": "default-tier-rules",
+          "sha256": "18c3dbd60c99757891d0a248b96480e2295280b69a3708e7b736eaea8e231304",
+          "version": "1"
+        },
+        "receipt_id": "wrc-7faf8a5dcf23",
+        "recorded_at": "2026-10-09T20:49:34.626413+00:00",
+        "schema": "lucidota-sched/1#worker-attempt-receipt",
+        "task_id": "task-2493fb77e938",
+        "terminal_state": "failed",
+        "tier": 2
+      },
+      "failure_reason": "adapter_exception: RuntimeError: fake adapter failure (synthetic)",
+      "receipt_digest": "ee0c04d1d534b18e61628ff947e944ba8cd7717cda8aefd0884157ec8cce5b83",
+      "receipt_id": "wrc-7faf8a5dcf23",
+      "task_id": "task-2493fb77e938",
+      "terminal_state": "failed",
+      "tier": 2
+    },
+    {
+      "attempt": 2,
+      "attempt_receipt": {
+        "artifact_ref": "",
+        "artifact_sha256": "",
+        "attempt": 0,
+        "attempt_id": "att-21c505ba482e",
+        "dispatch_receipt": null,
+        "envelope_id": "wre-d408daadf99e",
+        "envelope_sha256": "e3aee04051b7c9575ad886973afcd7b9a5e45d8989a89718f08d3025d1a3e63a",
+        "failure_reason": "adapter_exception: RuntimeError: fake adapter failure (synthetic)",
+        "prompt_ref": {
+          "prompt_id": "default-tier-rules",
+          "sha256": "18c3dbd60c99757891d0a248b96480e2295280b69a3708e7b736eaea8e231304",
+          "version": "1"
+        },
+        "receipt_id": "wrc-7faf8a5dcf23",
+        "recorded_at": "2026-10-09T20:49:34.706842+00:00",
+        "schema": "lucidota-sched/1#worker-attempt-receipt",
+        "task_id": "task-2493fb77e938",
+        "terminal_state": "failed",
+        "tier": 2
+      },
+      "failure_reason": "adapter_exception: RuntimeError: fake adapter failure (synthetic)",
+      "receipt_digest": "dec53001acb9ebc3014b06ca8d17cc421df10a80b33a7acb97c691466d768124",
+      "receipt_id": "wrc-7faf8a5dcf23",
+      "task_id": "task-2493fb77e938",
+      "terminal_state": "failed",
+      "tier": 2
+    }
+  ],
+  "blocked": [
+    {
+      "task_id": "task-4cb5bde0bddb",
+      "tier": 1
+    }
+  ],
+  "checks": [],
+  "dead_letters": [
+    {
+      "receipt": {
+        "dead_letter_sha256": "2dacd75b5083271013de27b42a325e220cd7c3c97ed5941b182cc76c620d3606",
+        "receipt_id": "dlr-task-1563e75766af-a2",
+        "task_id": "task-1563e75766af",
+        "terminal_state": "dead_letter",
+        "tier": 3,
+        "ts": "2026-10-09T20:49:34Z",
+        "worker_taxonomy": "RETRYABLE_FAILURE"
+      },
+      "task_id": "task-1563e75766af",
+      "tier": 3
+    },
+    {
+      "receipt": {
+        "dead_letter_sha256": "fb353b7dd7c129894615cb23815585b2ba2ab35db53f31f4a2c53ee0156549c5",
+        "receipt_id": "dlr-task-2493fb77e938-a2",
+        "task_id": "task-2493fb77e938",
+        "terminal_state": "dead_letter",
+        "tier": 2,
+        "ts": "2026-10-09T20:49:34Z",
+        "worker_taxonomy": "RETRYABLE_FAILURE"
+      },
+      "task_id": "task-2493fb77e938",
+      "tier": 2
+    }
+  ],
+  "finished_at": "2026-10-09T20:49:34.732415+00:00",
+  "guard_trips": [],
+  "mode": "live",
+  "plan": {
+    "allocations": 3,
+    "dry_quota_requests": 0,
+    "n_goals": 3,
+    "refusals": [],
+    "t1_kit": 1,
+    "t2_bundles": 1,
+    "t3_units": 1
+  },
+  "provider": null,
+  "quota": {
+    "log": "quota.jsonl",
+    "used": {}
+  },
+  "report_ref": "report.json",
+  "run_id": "run-20261009T204934Z-5c1d61c4",
+  "schema": "lucidota-sched/1#run-receipt",
+  "seal": {
+    "chain_head": "13d5caa3ba134b634043fe0deb54d968ae955fcc3cb0cff8fe714cd048e2efa8",
+    "n_attempts": 4
+  },
+  "started_at": "2026-10-09T20:49:34.538976+00:00",
+  "wall_seconds": 0.193,
+  "work_order_id": "wo-5c1d61c4fb3c",
+  "work_order_sha256": "5c1d61c4fb3c1489e313b8f3abce5456f799070fdad13648a7759be8fac07218"
+}

@@ -1,0 +1,53 @@
+{
+  "aborted": false,
+  "blocked": [],
+  "dead_letters": [],
+  "guard_trips": [],
+  "mode": "dry-run",
+  "per_tier": {
+    "1": {
+      "blocked": 0,
+      "dead_letter": 0,
+      "dispatched": 0,
+      "fail": 0,
+      "failed": 0,
+      "pass": 0,
+      "unknown": 0
+    },
+    "2": {
+      "blocked": 0,
+      "dead_letter": 0,
+      "dispatched": 0,
+      "fail": 0,
+      "failed": 0,
+      "pass": 0,
+      "unknown": 0
+    },
+    "3": {
+      "blocked": 0,
+      "dead_letter": 0,
+      "dispatched": 0,
+      "fail": 0,
+      "failed": 0,
+      "pass": 0,
+      "unknown": 0
+    }
+  },
+  "quota_used": {},
+  "receipt_path": "/home/hatch/workspace/batch-compile/tmp-pytest/test_rt5a_abs_inside_ok0/abs-runs/run-receipt.json",
+  "run_id": "run-20261009T204948Z-0024d4e9",
+  "schema": "lucidota-sched/1#run-report",
+  "totals": {
+    "attempts": 0,
+    "blocked": 0,
+    "checks_fail": 0,
+    "checks_pass": 0,
+    "completed": 0,
+    "dead_letter": 0,
+    "failed": 0,
+    "planned": 2,
+    "units_dispatched": 0
+  },
+  "wall_seconds": 0.0,
+  "work_order_sha256": "0024d4e90de0fdb79b8cdcfc6a44b53d262dbea8aa7e256818b576eeec0b965c"
+}

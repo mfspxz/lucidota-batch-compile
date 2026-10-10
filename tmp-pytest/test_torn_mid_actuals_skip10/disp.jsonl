@@ -1,0 +1,3 @@
+{"event": "dispatched", "task_id": "a", "source": "gemini", "at": "2026-10-09T12:01:00Z"}
+{"event": "dispatched", "task_id": "b", "source": "nvidia", "at": "2026-10-09T12:02:00Z"}
+{"event": "dispatched", "task_id": "c", "sour

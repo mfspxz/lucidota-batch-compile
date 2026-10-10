@@ -1,0 +1,1 @@
+{"decided_at":"2026-10-09T20:49:55.936283Z","detail":"minter=123 is not the quota coordinator","event":"refused","pool_id":"pool-e2a53e200410","reason_code":"AUTHORITY_VIOLATION","refused":true,"task_id":"t"}

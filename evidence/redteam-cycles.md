@@ -963,3 +963,185 @@ the last good seal.
 
 **Commits**: compute (shadow.py: C15-001/C15-002; allocate.py: C15-003;
 redteam_cycle15_test.py: 12 tests).
+
+---
+
+## Cycle 16 (2026-10-09 ~16:40 PDT)
+
+**C16-001 FIXED** [HIGH]: `dispatch_plan` hardcoded `attempt_index=0` into
+every `run_unit()` call. The driver's retry path re-invokes `dispatch_plan`
+with the same run_dir: `run_unit` derives `attempt_id` deterministically
+from (task_id, tier, envelope_id, attempt_index), so the retry landed on the
+SAME artifact filename and OVERWROTE attempt 1's bytes. The sealed receipt
+recorded for attempt 1 still bound `artifact_sha256` of the old bytes --
+proven: `verify_receipt` reported `artifact_sha256_mismatch` against the
+current file, and both receipts carried `attempt: 0` while the driver's log
+said attempts 1, 2. Fix: new optional `attempt_index_map` ({task_id: i64>=0})
+on `dispatch_plan`, validated fail-closed (`DispatchError` on non-mapping,
+bool, negative, non-int, out-of-i64-range), threaded into `run_unit`; the
+driver now passes its 1-based counter as `n-1`. Each retry gets a distinct
+attempt_id, distinct artifact path, and a receipt that keeps verifying
+against its own bytes. Chain invariants untouched (receipt still binds
+envelope_sha256 + prompt pin + artifact hash). Pinned by 5 tests.
+**C16-002**: tamper composition -- a FIFO planted at attempt-1's deterministic
+path fails that attempt fast (sealed `artifact_write_error`, no hang); the
+retry lands on a fresh path and completes; the tamper event dict
+(task/tier/attempt/reason/artifact_ref/at) is sealed into the run receipt's
+`tamper_events` list verbatim.
+**C16-003**: 1200-goal scale -- parse -> validate -> partition -> assign ->
+schedule completes <60s; every goal gets a deterministic verdict
+(allocated or named `BUDGET_EXCEEDED` refusal), none silently dropped,
+task_ids unique across the schedule.
+**C13 test topology update**: the C16-001 fix changed the retry path
+topology, so 2 cycle-13 assertions that encoded the old collision were
+updated with documented rationale: `test_13a_fifo_refused_no_hang` (the
+retry now recovers on a fresh path instead of re-hitting the FIFO; the
+read-side `artifact_not_regular` tamper event, no-hang, and receipt seal
+assertions are unchanged) and `test_13b_symlink_refused` (run now recovers
+rc=0 with the tamper sealed, instead of aborting; foreign-content-never-
+in-checks unchanged). The underlying write-side properties stay pinned at
+unit level: FIFO-at-target by the new c16 test, symlink-at-target by
+`test_c6c_planted_symlink_refused`. The old assertions tested the
+stuck-index collision, not a security property -- the writeup names this
+explicitly so a future reader doesn't "restore" them.
+
+**150-fixture battery**: 151/151, 3x green (unchanged).
+
+**Suite**: 1075 passed + 3 skipped, full run green. 0 provider calls.
+
+**Commits**: compute `0cc1b90` (driver_dispatch.py: attempt_index_map;
+driver.py: thread n-1; redteam_cycle16_test.py: 8 tests;
+redteam_cycle13_test.py: 2 topology updates).
+
+---
+
+## Cycle 17 (2026-10-09 ~17:05 PDT)
+
+**C17-001 FIXED** [MED x3]: hostile JSON nesting (`RecursionError` from
+100k-deep `[` nesting) escaped as a raw exception at three `json.loads`
+sites that only caught `JSONDecodeError`/`ValueError` --
+`allocate.QuotaCoordinator.replay_log` (quota log line),
+`checks._verify_governor_receipt` (governor receipt file, breaking its
+named-`_ReceiptError` contract), and `driver._open_run_dir` (prior
+run-receipt read). Proven x3 pre-fix (raw `RecursionError` propagated).
+Fix: `RecursionError` added to each except tuple -- replay drops the line
+as a corrupt entry (`replay_anomalies`), receipt load raises the named
+`_ReceiptError("receipt_unparseable:RecursionError")`, run-dir treats the
+receipt as foreign (`RunDirError`, refusing to clobber). `shadow._loads_line`
+already caught it (prior cycle); `prompts`/`retry` catch `Exception`.
+**C17-002 FIXED** [HIGH]: `live_adapters._read_text` trusted
+`raw_output_ref` from the provider payload dict with zero containment --
+via the `_generate` seam a hostile payload set it to any readable path and
+its bytes became `artifact_text` (written to the artifact file, sealed into
+receipts): arbitrary file read -> artifact laundering. Proven end-to-end
+through `DeepSeekDirectAdapter.execute` pre-fix. Fix: the ref must resolve
+inside `ADAPTERS_DIR/"raw"` (where both real producers write), name a
+regular non-symlink file; violations (outside dir, symlink, non-regular,
+null byte, non-string) raise named `AdapterError`, never silent `""`.
+Both adapters share `_read_text`; the pre-existing test seam helpers
+(`live_adapters_test._FileGen`/`_DsFileGen`, `cycle4a._ref`) were
+unfaithful (wrote fixtures to tmp_path) and now write into the raw dir
+with per-test cleanup -- 10 existing tests updated, none weakened.
+Design note (out of write scope): `adapters/gemini.py:205`
+`json.loads` on the raw provider HTTP body does not catch
+`RecursionError` either.
+**C17-003 HELD**: pre-seal-era plans fail closed on load (`ShadowError`,
+proven); sealed old-schema plans (valid seal, missing newer optional
+fields) verify and run through `compare_shadow` without crashing
+(`.get()` accessors hold). No change needed.
+**C17-004 HELD**: falsification chain under SIGKILL mid-append -- torn
+tail: `verify_chain` fails closed `(False, 4)` naming the line; the next
+`append_chained` chains onto the last good `_record_hash` (`_seq=4`);
+the torn bytes stay as permanent evidence. No `integrity.py` change
+needed (per the task's exception clause).
+
+**150-fixture battery**: 151/151, 3x green (unchanged).
+
+**Suite**: 1102 passed + 3 skipped, full run green (includes 16 tests
+from another lane's untracked `synthetic_dispatch_test.py`, all passing;
+it landed mid-cycle -- noted, not touched). 0 provider calls.
+
+**Commits**: compute `fa3b261` (allocate.py, checks.py, driver.py:
+RecursionError; live_adapters.py: _read_text containment + _raw_dir;
+redteam_cycle17_test.py: 11 tests; live_adapters_test.py,
+redteam_cycle4a_test.py: faithful seam fixtures).
+
+---
+
+## Cycle 18 (2026-10-09 ~17:25 PDT)
+
+All four attack surfaces HELD -- no code fixes, 9 tests pinning the
+defended behavior:
+
+**C18-001 HELD**: quota pool exhaustion at exact limit boundaries. 8
+threads x reserve(1) on a limit-3 pool: exactly 3 reserve, 5 refuse with
+named `BUDGET_EXCEEDED`, `held==3` -- the check-then-act is atomic under
+the coordinator lock, no overspend. Boundary semantics pinned:
+reserve(units == limit) allowed (inclusive), reserve(units > limit)
+refused with zero partial spend.
+**C18-002 HELD**: hostile provider strings. `canonical_provider` fails
+closed (`AllocatorError`) on 13 hostile shapes: case variants,
+whitespace, path junk, null byte, empty, None, unhashable (list/dict),
+non-string (int/float/bool). `--provider ../../evil` is a plain CLI
+error (exit 1, nothing dispatched). A hostile adapter `provider_id`
+aborts the run via `_GuardAbort` (reason NO_POOL): 0 attempts, 0 quota
+spent, sealed aborted receipt -- verified end-to-end, not just the
+return code.
+**C18-003 HELD**: duplicate member ids in tier-2 bundles.
+`check_t2_consistency` uses set semantics (duplicates redundant, not
+contradictory; deterministic across runs). Stronger property found while
+probing: `t2_envelope` normalizes `t3_result_refs` to a **sorted set** at
+the envelope boundary (`sorted(set(...))`), so the T2 worker can never
+see the same result twice -- pinned by test.
+**C18-004 HELD**: 2MB `failure_reason` claim field seals into a receipt,
+serializes, and verifies in bounded time (<30s, measured ~instant).
+Envelope/prompt bindings hold; the artifact binding is vacuous for
+failed attempts (`""` vs `sha256(b"")` reports `artifact_sha256_mismatch`
+-- existing contract, pinned as-is). Design note: claim fields are
+uncapped; bloat is bounded only by max_attempts per task.
+
+**150-fixture battery**: 151/151, 3x green (unchanged).
+
+**Suite**: 1111 passed + 3 skipped, full run green. 0 provider calls.
+
+**Commits**: compute (redteam_cycle18_test.py: 9 tests; no production
+code changes this cycle -- the attacks confirmed the defenses).
+
+## Cycle 19 (2026-10-09 ~18:00 PDT)
+
+**C19-001 FIXED**: `adapters/gemini.py:205` `json.loads` on the raw
+provider HTTP body -- same treatment as C17-001. A 60k-deep nested body
+now yields a named `invalid` Execution
+("unparseable response: RecursionError (hostile nesting depth)") with the
+failure ledger-recorded; previously it relied on the broad
+`except Exception`. Surgical fix + 2 regression tests (hostile named,
+valid body still `success`).
+**C19-002 FIXED**: `compare_against_policy`'s oracle is documented
+UNTRUSTED, but a *raising* oracle escaped raw (only KeyboardInterrupt /
+SystemExit were named). Now `except Exception` -> named failed
+CheckResult (`oracle_exception:<Type>`). Same gap in `route_track_stop`:
+`bool(applied)` sat *outside* the backend try, so a backend returning an
+object with a raising `__bool__` escaped -- moved inside the try.
+**C19-002b FIXED**: hostile oracle *outputs* were uncapped -- a 2MB
+`measured` blob or million-key dict would bloat sealed receipts. Oracle
+results are now size-capped at 1MiB serialized (`_MAX_ORACLE_RESULT_BYTES`,
+same precedent as `_MAX_RECEIPT_BYTES`); over-cap ->
+`oracle_result_too_large`, unserializable/deep-nesting ->
+`oracle_result_unserializable:<Type>` (C17-001 treatment on the dumps).
+**C19-003 FIXED**: shadow receipt/plan append under simulated ENOSPC
+propagated raw `OSError` from `os.write`/`os.fsync`. New `_write_all`
+helper converts to named `ShadowError` at all three write sites
+(`_append`, `_append_with_tail`, `_append_many_with_tail`); locks still
+released, next append works.
+**C19-004 HELD**: 10k-allocation shadow plan -- correct and bounded
+(~165s; ~16ms/unit dominated by the quota log's per-record fsync),
+allocations+refusals == 10000, zero crashes, plan chain verifies.
+Design note R23: batch the quota log if 10k-unit plans become routine
+(durability tradeoff, not a Phase-1 defect).
+**C19-005 HELD**: 0-goal work order -> plain `workorder: zero goals`
+error; driver CLI exits 1 with the error on stderr, no traceback.
+
+**150-fixture battery**: 151/151, 3x green (unchanged).
+**Tests**: 19 new in redteam_cycle19_test.py (17 fast + 2 scale).
+**Commits**: compute (4 files: checks.py, shadow.py, redteam_cycle19_test.py,
+adapters/gemini.py).

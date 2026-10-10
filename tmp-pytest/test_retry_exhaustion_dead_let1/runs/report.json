@@ -1,0 +1,58 @@
+{
+  "aborted": false,
+  "blocked": [
+    "task-4cb5bde0bddb"
+  ],
+  "dead_letters": [
+    "task-1563e75766af",
+    "task-2493fb77e938"
+  ],
+  "guard_trips": [],
+  "mode": "live",
+  "per_tier": {
+    "1": {
+      "blocked": 1,
+      "dead_letter": 0,
+      "dispatched": 0,
+      "fail": 0,
+      "failed": 0,
+      "pass": 0,
+      "unknown": 0
+    },
+    "2": {
+      "blocked": 0,
+      "dead_letter": 1,
+      "dispatched": 1,
+      "fail": 0,
+      "failed": 0,
+      "pass": 0,
+      "unknown": 0
+    },
+    "3": {
+      "blocked": 0,
+      "dead_letter": 1,
+      "dispatched": 1,
+      "fail": 0,
+      "failed": 0,
+      "pass": 0,
+      "unknown": 0
+    }
+  },
+  "quota_used": {},
+  "receipt_path": "/home/hatch/workspace/batch-compile/tmp-pytest/test_retry_exhaustion_dead_let1/runs/run-receipt.json",
+  "run_id": "run-20261009T204934Z-5c1d61c4",
+  "schema": "lucidota-sched/1#run-report",
+  "totals": {
+    "attempts": 4,
+    "blocked": 1,
+    "checks_fail": 0,
+    "checks_pass": 0,
+    "completed": 0,
+    "dead_letter": 2,
+    "failed": 0,
+    "planned": 3,
+    "units_dispatched": 2
+  },
+  "wall_seconds": 0.193,
+  "work_order_sha256": "5c1d61c4fb3c1489e313b8f3abce5456f799070fdad13648a7759be8fac07218"
+}

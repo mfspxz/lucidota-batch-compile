@@ -1,0 +1,2 @@
+{"attempts":2,"failure_class":"RETRYABLE","max_attempts":5,"reason":"adapter_exception: RuntimeError: fake adapter failure (synthetic)","task_id":"task-1563e75766af","terminal":"dead_letter","tier":3,"ts":"2026-10-09T20:49:34Z","worker_taxonomy":"RETRYABLE_FAILURE"}
+{"attempts":2,"failure_class":"RETRYABLE","max_attempts":5,"reason":"adapter_exception: RuntimeError: fake adapter failure (synthetic)","task_id":"task-2493fb77e938","terminal":"dead_letter","tier":2,"ts":"2026-10-09T20:49:34Z","worker_taxonomy":"RETRYABLE_FAILURE"}

@@ -1,0 +1,7 @@
+Objective: Probe the run-dir surface.
+
+Development rules:
+- Keep it simple.
+
+Goal 1 [implement]: Probe the run-dir surface.
+Done-When: probe completes

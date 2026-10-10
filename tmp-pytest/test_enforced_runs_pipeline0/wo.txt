@@ -1,0 +1,12 @@
+Objective: Exercise the pipeline flag matrix.
+
+Development rules:
+- Keep it deterministic.
+- No provider calls.
+
+Goal 1 [inspect]: Inspect the flag contract.
+Done-When: flags documented
+
+Goal 2 [implement]: Wire the enforced entry point.
+Depends-On: 1
+Done-When: enforced cycle completes

@@ -1,0 +1,1 @@
+{"attempts":5,"failure_class":"QUOTA","max_attempts":5,"reason":"quota exhausted","task_id":"t-1","terminal":"dead_letter","tier":2,"ts":"sim+0s","worker_taxonomy":"QUOTA_FAILURE"}

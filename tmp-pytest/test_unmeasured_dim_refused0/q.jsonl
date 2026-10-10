@@ -1,0 +1,2 @@
+{"decided_at":"2026-10-09T20:49:33.759750Z","detail":"kind=tpm unmeasured (UF-007): TPM/concurrency are symbolic, never invented","event":"refused","pool_id":"pool-e2a53e200410","reason_code":"NO_MEASURED_EVIDENCE","refused":true,"task_id":"t-1"}
+{"decided_at":"2026-10-09T20:49:33.773592Z","detail":"kind=concurrency unmeasured (UF-007): TPM/concurrency are symbolic, never invented","event":"refused","pool_id":"pool-e2a53e200410","reason_code":"NO_MEASURED_EVIDENCE","refused":true,"task_id":"t-2"}

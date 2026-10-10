@@ -1,0 +1,106 @@
+{
+  "aborted": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "attempt_receipt": {
+        "artifact_ref": "/home/hatch/workspace/batch-compile/tmp-pytest/test_rt4a_cli_live_e2e_ok0/runs/artifacts/task-babdd23ea6e8/att-d6218107bd54.artifact.md",
+        "artifact_sha256": "864d8613abdb223da7d5deef4fefce25c9c6bd3351851daea6d3d3c5a1a435e7",
+        "attempt": 0,
+        "attempt_id": "att-d6218107bd54",
+        "dispatch_receipt": {
+          "artifact_hash": "864d8613abdb223da7d5deef4fefce25c9c6bd3351851daea6d3d3c5a1a435e7",
+          "artifact_path": "/home/hatch/workspace/batch-compile/tmp-pytest/test_rt4a_cli_live_e2e_ok0/runs/artifacts/task-babdd23ea6e8/att-d6218107bd54.artifact.md",
+          "completed_at": "2026-10-09T20:49:40Z",
+          "dispatch_id": "dsp-75619c4b6ea6",
+          "late": false,
+          "receipt_id": "dcpt-d90c54ba0fca",
+          "status": "completed",
+          "task_id": "task-babdd23ea6e8",
+          "verification": {
+            "envelope_id": "wre-aa36bc19b174",
+            "envelope_sha256": "8a3b026b4024e103f11b77f3acd2f0130917b802125d0c50e618f965990a773e",
+            "prompt_ref": {
+              "prompt_id": "default-tier-rules",
+              "sha256": "18c3dbd60c99757891d0a248b96480e2295280b69a3708e7b736eaea8e231304",
+              "version": "1"
+            },
+            "violations": []
+          }
+        },
+        "envelope_id": "wre-aa36bc19b174",
+        "envelope_sha256": "8a3b026b4024e103f11b77f3acd2f0130917b802125d0c50e618f965990a773e",
+        "failure_reason": null,
+        "prompt_ref": {
+          "prompt_id": "default-tier-rules",
+          "sha256": "18c3dbd60c99757891d0a248b96480e2295280b69a3708e7b736eaea8e231304",
+          "version": "1"
+        },
+        "receipt_id": "wrc-9fc5ac869e21",
+        "recorded_at": "2026-10-09T20:49:40.575172+00:00",
+        "schema": "lucidota-sched/1#worker-attempt-receipt",
+        "task_id": "task-babdd23ea6e8",
+        "terminal_state": "completed",
+        "tier": 3
+      },
+      "failure_reason": null,
+      "receipt_digest": "698977a69cc7d368c7ac343bf97a41ea12e82b2011397b0b4d6084204e5c1f85",
+      "receipt_id": "wrc-9fc5ac869e21",
+      "task_id": "task-babdd23ea6e8",
+      "terminal_state": "completed",
+      "tier": 3
+    }
+  ],
+  "blocked": [
+    {
+      "task_id": "task-b12b21ea0d68",
+      "tier": 1
+    }
+  ],
+  "checks": [
+    {
+      "evidence_refs": [
+        "864d8613abdb223da7d5deef4fefce25c9c6bd3351851daea6d3d3c5a1a435e7"
+      ],
+      "measured": {
+        "bound": true,
+        "content_sha256": "864d8613abdb223da7d5deef4fefce25c9c6bd3351851daea6d3d3c5a1a435e7"
+      },
+      "op": "t3-completion",
+      "outcome": "pass",
+      "task_id": "task-babdd23ea6e8",
+      "tier": 3
+    }
+  ],
+  "dead_letters": [],
+  "finished_at": "2026-10-09T20:49:40.764433+00:00",
+  "guard_trips": [],
+  "mode": "live",
+  "plan": {
+    "allocations": 2,
+    "dry_quota_requests": 0,
+    "n_goals": 1,
+    "refusals": [],
+    "t1_kit": 1,
+    "t2_bundles": 0,
+    "t3_units": 1
+  },
+  "provider": null,
+  "quota": {
+    "log": "quota.jsonl",
+    "used": {
+      "nvidia": 1
+    }
+  },
+  "report_ref": "report.json",
+  "run_id": "run-20261009T204940Z-3d21becc",
+  "schema": "lucidota-sched/1#run-receipt",
+  "seal": {
+    "chain_head": "41d4258ac40ba9bd544513a7869fc16a25825240718bb673491598f3ecda5493",
+    "n_attempts": 1
+  },
+  "started_at": "2026-10-09T20:49:40.560371+00:00",
+  "wall_seconds": 0.204,
+  "work_order_id": "wo-3d21becc00ca",
+  "work_order_sha256": "3d21becc00ca0f46ef0b1e6405a5440936c7c837f3198d4d0ffcf3a45e917f59"
+}

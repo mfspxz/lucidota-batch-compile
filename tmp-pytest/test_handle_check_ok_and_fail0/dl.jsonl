@@ -1,0 +1,1 @@
+{"attempts":2,"failure_class":"VERIFICATION_FAILURE","max_attempts":5,"reason":"check t3-completion outcome=False","task_id":"t-1","terminal":"dead_letter","tier":3,"ts":"2026-10-09T20:49:32Z","worker_taxonomy":"VERIFICATION_FAILURE"}

@@ -1,0 +1,2 @@
+{"envelope_id": "wre-d23c172292d0", "mode": "shadow", "model": "nvidia-nim", "provider": "nvidia", "task_id": "task-18212c9525c3", "tier": 3, "unit_ref": "t3-c376b7c28a84", "would_dispatch": true}
+{"envelope_id": "wre-176024d65aee", "mode": "shadow", "model": "nvidia-nim", "provider": "nvidia", "task_id": "task-8bcaca854261", "tier": 2, "unit_ref": "t2-5f1d10b565bc", "would_dispatch": true}

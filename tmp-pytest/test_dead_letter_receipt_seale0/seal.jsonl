@@ -1,0 +1,1 @@
+{"attempts":5,"failure_class":"RETRYABLE","max_attempts":5,"reason":"x","task_id":"t-r","terminal":"dead_letter","tier":3,"ts":"2026-10-09T00:00:00Z","worker_taxonomy":"RETRYABLE_FAILURE"}

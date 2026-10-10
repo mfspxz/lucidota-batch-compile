@@ -1,0 +1,468 @@
+{
+  "aborted": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "attempt_receipt": {
+        "artifact_ref": "/home/hatch/workspace/batch-compile/tmp-pytest/test_shadow_stub_exits_10/runs/artifacts/task-eea21166a8a8/att-ccf561d2cc31.artifact.md",
+        "artifact_sha256": "4a2b50bbd08c3852785bace8d843aa26771f135055bda1d533ee1008c6130374",
+        "attempt": 0,
+        "attempt_id": "att-ccf561d2cc31",
+        "dispatch_receipt": {
+          "dispatch_id": "dsp-fake-0001",
+          "receipt_id": "dcpt-dsp-fake-0001",
+          "status": "completed"
+        },
+        "envelope_id": "wre-41cf900283f4",
+        "envelope_sha256": "71148317fc44d930cdd7fcaa9fc197fb20a9b0378e6f25a4e01bd4840938b051",
+        "failure_reason": null,
+        "prompt_ref": {
+          "prompt_id": "default-tier-rules",
+          "sha256": "18c3dbd60c99757891d0a248b96480e2295280b69a3708e7b736eaea8e231304",
+          "version": "1"
+        },
+        "receipt_id": "wrc-48f25fde7818",
+        "recorded_at": "2026-10-09T20:49:31.290945+00:00",
+        "schema": "lucidota-sched/1#worker-attempt-receipt",
+        "task_id": "task-eea21166a8a8",
+        "terminal_state": "completed",
+        "tier": 3
+      },
+      "failure_reason": null,
+      "receipt_digest": "09facd3265de96d1c3fafe173748f3c356e7ece8a657d055d50d0eb8b9543f2d",
+      "receipt_id": "wrc-48f25fde7818",
+      "task_id": "task-eea21166a8a8",
+      "terminal_state": "completed",
+      "tier": 3
+    },
+    {
+      "attempt": 1,
+      "attempt_receipt": {
+        "artifact_ref": "/home/hatch/workspace/batch-compile/tmp-pytest/test_shadow_stub_exits_10/runs/artifacts/task-1b9453b55211/att-24d7f8382340.artifact.md",
+        "artifact_sha256": "21ad8eb5883d796495e4471222ba996858ccacf02deb416b01025ed0e67f0eb1",
+        "attempt": 0,
+        "attempt_id": "att-24d7f8382340",
+        "dispatch_receipt": {
+          "dispatch_id": "dsp-fake-0002",
+          "receipt_id": "dcpt-dsp-fake-0002",
+          "status": "completed"
+        },
+        "envelope_id": "wre-216c99f8724d",
+        "envelope_sha256": "d55c8eef4c567a01534eab3b7e37629bc3b8cae7fd584727e11521f9e5605d9a",
+        "failure_reason": null,
+        "prompt_ref": {
+          "prompt_id": "default-tier-rules",
+          "sha256": "18c3dbd60c99757891d0a248b96480e2295280b69a3708e7b736eaea8e231304",
+          "version": "1"
+        },
+        "receipt_id": "wrc-0b70c5ce2701",
+        "recorded_at": "2026-10-09T20:49:31.310140+00:00",
+        "schema": "lucidota-sched/1#worker-attempt-receipt",
+        "task_id": "task-1b9453b55211",
+        "terminal_state": "completed",
+        "tier": 2
+      },
+      "failure_reason": null,
+      "receipt_digest": "53eadb89a35b778ae568b524024d12d5473ed1343dcd2e87bf60b66b3029e4bd",
+      "receipt_id": "wrc-0b70c5ce2701",
+      "task_id": "task-1b9453b55211",
+      "terminal_state": "completed",
+      "tier": 2
+    },
+    {
+      "attempt": 1,
+      "attempt_receipt": {
+        "artifact_ref": "/home/hatch/workspace/batch-compile/tmp-pytest/test_shadow_stub_exits_10/runs/artifacts/task-22329cbd2147/att-9149bb491d94.artifact.md",
+        "artifact_sha256": "6f7b3e0ab32bd79eade61ac1e0b23ca8634eded664c720a226e3e964e27e35af",
+        "attempt": 0,
+        "attempt_id": "att-9149bb491d94",
+        "dispatch_receipt": {
+          "dispatch_id": "dsp-fake-0003",
+          "receipt_id": "dcpt-dsp-fake-0003",
+          "status": "completed"
+        },
+        "envelope_id": "wre-22a3834b1665",
+        "envelope_sha256": "7ba621a18c28930c281a07847fc262539c317e29d884206cfd4c84b2fb641e0d",
+        "failure_reason": null,
+        "prompt_ref": {
+          "prompt_id": "default-tier-rules",
+          "sha256": "18c3dbd60c99757891d0a248b96480e2295280b69a3708e7b736eaea8e231304",
+          "version": "1"
+        },
+        "receipt_id": "wrc-afd3183caa4c",
+        "recorded_at": "2026-10-09T20:49:31.336886+00:00",
+        "schema": "lucidota-sched/1#worker-attempt-receipt",
+        "task_id": "task-22329cbd2147",
+        "terminal_state": "completed",
+        "tier": 2
+      },
+      "failure_reason": null,
+      "receipt_digest": "f436388810d03abd491489bc889bc20d066f6059f290c356a84a7cf9a55d06bf",
+      "receipt_id": "wrc-afd3183caa4c",
+      "task_id": "task-22329cbd2147",
+      "terminal_state": "completed",
+      "tier": 2
+    },
+    {
+      "attempt": 1,
+      "attempt_receipt": {
+        "artifact_ref": "/home/hatch/workspace/batch-compile/tmp-pytest/test_shadow_stub_exits_10/runs/artifacts/task-44c5b53ca1c6/att-3988ea8e03ab.artifact.md",
+        "artifact_sha256": "8b3a3f0685218605f2b3d34ebb9eb9861269b985be89bb53b65df729006bf25f",
+        "attempt": 0,
+        "attempt_id": "att-3988ea8e03ab",
+        "dispatch_receipt": {
+          "dispatch_id": "dsp-fake-0004",
+          "receipt_id": "dcpt-dsp-fake-0004",
+          "status": "completed"
+        },
+        "envelope_id": "wre-931ccd4cb79d",
+        "envelope_sha256": "d4ae5990247047fe04bc7c71a66b1b67878ab06c9fe46e72cf919b14dd7a42fa",
+        "failure_reason": null,
+        "prompt_ref": {
+          "prompt_id": "default-tier-rules",
+          "sha256": "18c3dbd60c99757891d0a248b96480e2295280b69a3708e7b736eaea8e231304",
+          "version": "1"
+        },
+        "receipt_id": "wrc-be38bcd49484",
+        "recorded_at": "2026-10-09T20:49:31.359579+00:00",
+        "schema": "lucidota-sched/1#worker-attempt-receipt",
+        "task_id": "task-44c5b53ca1c6",
+        "terminal_state": "completed",
+        "tier": 2
+      },
+      "failure_reason": null,
+      "receipt_digest": "c4a49a6105b21259564dded2f4e04766d31c079d0c5cc8ea45f46acb320ca990",
+      "receipt_id": "wrc-be38bcd49484",
+      "task_id": "task-44c5b53ca1c6",
+      "terminal_state": "completed",
+      "tier": 2
+    },
+    {
+      "attempt": 1,
+      "attempt_receipt": {
+        "artifact_ref": "/home/hatch/workspace/batch-compile/tmp-pytest/test_shadow_stub_exits_10/runs/artifacts/task-5f84422067e6/att-675c6b9c32b7.artifact.md",
+        "artifact_sha256": "916f86c16a0cb223d93cb01d2e2e841296ca2771b76c290ef22d909dee65dc74",
+        "attempt": 0,
+        "attempt_id": "att-675c6b9c32b7",
+        "dispatch_receipt": {
+          "dispatch_id": "dsp-fake-0005",
+          "receipt_id": "dcpt-dsp-fake-0005",
+          "status": "completed"
+        },
+        "envelope_id": "wre-6bb37ebcd74f",
+        "envelope_sha256": "268323dca93e0094d4479136f24358300a7d1090b385ce10951561a1a1abe7b7",
+        "failure_reason": null,
+        "prompt_ref": {
+          "prompt_id": "default-tier-rules",
+          "sha256": "18c3dbd60c99757891d0a248b96480e2295280b69a3708e7b736eaea8e231304",
+          "version": "1"
+        },
+        "receipt_id": "wrc-59cd74ed7a70",
+        "recorded_at": "2026-10-09T20:49:31.385486+00:00",
+        "schema": "lucidota-sched/1#worker-attempt-receipt",
+        "task_id": "task-5f84422067e6",
+        "terminal_state": "completed",
+        "tier": 2
+      },
+      "failure_reason": null,
+      "receipt_digest": "510ba70682eb0d779cea975752883d68d03ad262e68a8100cf39b8c15ad4bc97",
+      "receipt_id": "wrc-59cd74ed7a70",
+      "task_id": "task-5f84422067e6",
+      "terminal_state": "completed",
+      "tier": 2
+    },
+    {
+      "attempt": 1,
+      "attempt_receipt": {
+        "artifact_ref": "/home/hatch/workspace/batch-compile/tmp-pytest/test_shadow_stub_exits_10/runs/artifacts/task-7c19414b0a86/att-1b8f6f9ca4c1.artifact.md",
+        "artifact_sha256": "d0ab2f766a6beab822b5dcbde887577d254db7b1dd2ade35f2ebec5ed160f7db",
+        "attempt": 0,
+        "attempt_id": "att-1b8f6f9ca4c1",
+        "dispatch_receipt": {
+          "dispatch_id": "dsp-fake-0006",
+          "receipt_id": "dcpt-dsp-fake-0006",
+          "status": "completed"
+        },
+        "envelope_id": "wre-02b3b855ebd3",
+        "envelope_sha256": "6624a46fb84aba8263b424a57517785b80b1c19c1bb1567ca77366a05fd656cb",
+        "failure_reason": null,
+        "prompt_ref": {
+          "prompt_id": "default-tier-rules",
+          "sha256": "18c3dbd60c99757891d0a248b96480e2295280b69a3708e7b736eaea8e231304",
+          "version": "1"
+        },
+        "receipt_id": "wrc-8b6756a7ff04",
+        "recorded_at": "2026-10-09T20:49:31.432732+00:00",
+        "schema": "lucidota-sched/1#worker-attempt-receipt",
+        "task_id": "task-7c19414b0a86",
+        "terminal_state": "completed",
+        "tier": 2
+      },
+      "failure_reason": null,
+      "receipt_digest": "5154ec044500c6ff7656a60c687c12a9b94aeacdbf4b5835648b13c682c69a69",
+      "receipt_id": "wrc-8b6756a7ff04",
+      "task_id": "task-7c19414b0a86",
+      "terminal_state": "completed",
+      "tier": 2
+    },
+    {
+      "attempt": 1,
+      "attempt_receipt": {
+        "artifact_ref": "/home/hatch/workspace/batch-compile/tmp-pytest/test_shadow_stub_exits_10/runs/artifacts/task-889a20b7fc49/att-38886426089c.artifact.md",
+        "artifact_sha256": "706f293f3cb505917b14eba621ce6006ea678d9c7aa81f1a90cfa7e5c25e41ef",
+        "attempt": 0,
+        "attempt_id": "att-38886426089c",
+        "dispatch_receipt": {
+          "dispatch_id": "dsp-fake-0007",
+          "receipt_id": "dcpt-dsp-fake-0007",
+          "status": "completed"
+        },
+        "envelope_id": "wre-e581a86ac1dc",
+        "envelope_sha256": "e8adcef229e31be0723a7d2577ef217cfc67a7745e77f3845cbbb6baa68f5681",
+        "failure_reason": null,
+        "prompt_ref": {
+          "prompt_id": "default-tier-rules",
+          "sha256": "18c3dbd60c99757891d0a248b96480e2295280b69a3708e7b736eaea8e231304",
+          "version": "1"
+        },
+        "receipt_id": "wrc-363175431ed9",
+        "recorded_at": "2026-10-09T20:49:31.461984+00:00",
+        "schema": "lucidota-sched/1#worker-attempt-receipt",
+        "task_id": "task-889a20b7fc49",
+        "terminal_state": "completed",
+        "tier": 2
+      },
+      "failure_reason": null,
+      "receipt_digest": "323980214aec27f50060aa938c2702cf217597c67d3da69a3f0ad63c282c1916",
+      "receipt_id": "wrc-363175431ed9",
+      "task_id": "task-889a20b7fc49",
+      "terminal_state": "completed",
+      "tier": 2
+    },
+    {
+      "attempt": 1,
+      "attempt_receipt": {
+        "artifact_ref": "/home/hatch/workspace/batch-compile/tmp-pytest/test_shadow_stub_exits_10/runs/artifacts/task-ac45fe36c306/att-66b77f36d5f0.artifact.md",
+        "artifact_sha256": "b5aa3dbef2531fc18cb3fdc34f688764d67c010ae9d1d51e2fea6a0067bd1b2c",
+        "attempt": 0,
+        "attempt_id": "att-66b77f36d5f0",
+        "dispatch_receipt": {
+          "dispatch_id": "dsp-fake-0008",
+          "receipt_id": "dcpt-dsp-fake-0008",
+          "status": "completed"
+        },
+        "envelope_id": "wre-ba7238070a59",
+        "envelope_sha256": "a854785aa213b54b75b26f6f9ee4580e1c5722ccf79a1195061cc5cb1e9148e8",
+        "failure_reason": null,
+        "prompt_ref": {
+          "prompt_id": "default-tier-rules",
+          "sha256": "18c3dbd60c99757891d0a248b96480e2295280b69a3708e7b736eaea8e231304",
+          "version": "1"
+        },
+        "receipt_id": "wrc-561c7e583c65",
+        "recorded_at": "2026-10-09T20:49:31.498593+00:00",
+        "schema": "lucidota-sched/1#worker-attempt-receipt",
+        "task_id": "task-ac45fe36c306",
+        "terminal_state": "completed",
+        "tier": 2
+      },
+      "failure_reason": null,
+      "receipt_digest": "615e1fa45a94b0c9fc1dc2993f7585aaca6cd78a437042e358bf1c41637a1991",
+      "receipt_id": "wrc-561c7e583c65",
+      "task_id": "task-ac45fe36c306",
+      "terminal_state": "completed",
+      "tier": 2
+    },
+    {
+      "attempt": 1,
+      "attempt_receipt": {
+        "artifact_ref": "/home/hatch/workspace/batch-compile/tmp-pytest/test_shadow_stub_exits_10/runs/artifacts/task-5547c8b711b2/att-06ddbca00e5e.artifact.md",
+        "artifact_sha256": "ee3213fc9d1bce0112a52537e1e3cbcbc8f43ce8079eecdc7a03e11762b32c8c",
+        "attempt": 0,
+        "attempt_id": "att-06ddbca00e5e",
+        "dispatch_receipt": {
+          "dispatch_id": "dsp-fake-0009",
+          "receipt_id": "dcpt-dsp-fake-0009",
+          "status": "completed"
+        },
+        "envelope_id": "wre-3c9f518dc99f",
+        "envelope_sha256": "2e56c794efd46942d00ae9fc619898421fa5fbf6a199cb4c1be0ea17d629a495",
+        "failure_reason": null,
+        "prompt_ref": {
+          "prompt_id": "default-tier-rules",
+          "sha256": "18c3dbd60c99757891d0a248b96480e2295280b69a3708e7b736eaea8e231304",
+          "version": "1"
+        },
+        "receipt_id": "wrc-25d6055bafb2",
+        "recorded_at": "2026-10-09T20:49:31.523634+00:00",
+        "schema": "lucidota-sched/1#worker-attempt-receipt",
+        "task_id": "task-5547c8b711b2",
+        "terminal_state": "completed",
+        "tier": 1
+      },
+      "failure_reason": null,
+      "receipt_digest": "14c6eb3193f230d37cd1b40524c723682134468507fbb7e51827860232b15347",
+      "receipt_id": "wrc-25d6055bafb2",
+      "task_id": "task-5547c8b711b2",
+      "terminal_state": "completed",
+      "tier": 1
+    }
+  ],
+  "blocked": [],
+  "checks": [
+    {
+      "evidence_refs": [
+        "4a2b50bbd08c3852785bace8d843aa26771f135055bda1d533ee1008c6130374"
+      ],
+      "measured": {
+        "bound": true,
+        "content_sha256": "4a2b50bbd08c3852785bace8d843aa26771f135055bda1d533ee1008c6130374"
+      },
+      "op": "t3-completion",
+      "outcome": "pass",
+      "task_id": "task-eea21166a8a8",
+      "tier": 3
+    },
+    {
+      "evidence_refs": [
+        "21ad8eb5883d796495e4471222ba996858ccacf02deb416b01025ed0e67f0eb1"
+      ],
+      "measured": {
+        "missing_items": []
+      },
+      "op": "t2-consistency",
+      "outcome": "pass",
+      "task_id": "task-1b9453b55211",
+      "tier": 2
+    },
+    {
+      "evidence_refs": [
+        "6f7b3e0ab32bd79eade61ac1e0b23ca8634eded664c720a226e3e964e27e35af"
+      ],
+      "measured": {
+        "missing_items": []
+      },
+      "op": "t2-consistency",
+      "outcome": "pass",
+      "task_id": "task-22329cbd2147",
+      "tier": 2
+    },
+    {
+      "evidence_refs": [
+        "8b3a3f0685218605f2b3d34ebb9eb9861269b985be89bb53b65df729006bf25f"
+      ],
+      "measured": {
+        "missing_items": []
+      },
+      "op": "t2-consistency",
+      "outcome": "pass",
+      "task_id": "task-44c5b53ca1c6",
+      "tier": 2
+    },
+    {
+      "evidence_refs": [
+        "916f86c16a0cb223d93cb01d2e2e841296ca2771b76c290ef22d909dee65dc74"
+      ],
+      "measured": {
+        "missing_items": []
+      },
+      "op": "t2-consistency",
+      "outcome": "pass",
+      "task_id": "task-5f84422067e6",
+      "tier": 2
+    },
+    {
+      "evidence_refs": [
+        "d0ab2f766a6beab822b5dcbde887577d254db7b1dd2ade35f2ebec5ed160f7db"
+      ],
+      "measured": {
+        "missing_items": []
+      },
+      "op": "t2-consistency",
+      "outcome": "pass",
+      "task_id": "task-7c19414b0a86",
+      "tier": 2
+    },
+    {
+      "evidence_refs": [
+        "706f293f3cb505917b14eba621ce6006ea678d9c7aa81f1a90cfa7e5c25e41ef"
+      ],
+      "measured": {
+        "missing_items": []
+      },
+      "op": "t2-consistency",
+      "outcome": "pass",
+      "task_id": "task-889a20b7fc49",
+      "tier": 2
+    },
+    {
+      "evidence_refs": [
+        "4a2b50bbd08c3852785bace8d843aa26771f135055bda1d533ee1008c6130374",
+        "b5aa3dbef2531fc18cb3fdc34f688764d67c010ae9d1d51e2fea6a0067bd1b2c"
+      ],
+      "measured": {
+        "missing_items": []
+      },
+      "op": "t2-consistency",
+      "outcome": "pass",
+      "task_id": "task-ac45fe36c306",
+      "tier": 2
+    },
+    {
+      "evidence_refs": [
+        "9d3cb8ce0f3f6576c7edaba9385930ff6a12ee4c300e92f1667580bf6bada7fd",
+        "9d3cb8ce0f3f6576c7edaba9385930ff6a12ee4c300e92f1667580bf6bada7fd",
+        "9d3cb8ce0f3f6576c7edaba9385930ff6a12ee4c300e92f1667580bf6bada7fd",
+        "9d3cb8ce0f3f6576c7edaba9385930ff6a12ee4c300e92f1667580bf6bada7fd",
+        "9d3cb8ce0f3f6576c7edaba9385930ff6a12ee4c300e92f1667580bf6bada7fd",
+        "9d3cb8ce0f3f6576c7edaba9385930ff6a12ee4c300e92f1667580bf6bada7fd",
+        "9d3cb8ce0f3f6576c7edaba9385930ff6a12ee4c300e92f1667580bf6bada7fd",
+        "9d3cb8ce0f3f6576c7edaba9385930ff6a12ee4c300e92f1667580bf6bada7fd",
+        "9d3cb8ce0f3f6576c7edaba9385930ff6a12ee4c300e92f1667580bf6bada7fd"
+      ],
+      "measured": {
+        "acceptance": {
+          "content_sha256": "9d3cb8ce0f3f6576c7edaba9385930ff6a12ee4c300e92f1667580bf6bada7fd"
+        },
+        "t2_nonpass_refs": [],
+        "uncovered_items": []
+      },
+      "op": "t1-coherence",
+      "outcome": "pass",
+      "task_id": "task-5547c8b711b2",
+      "tier": 1
+    }
+  ],
+  "dead_letters": [],
+  "finished_at": "2026-10-09T20:49:31.540041+00:00",
+  "guard_trips": [],
+  "mode": "shadow",
+  "plan": {
+    "allocations": 9,
+    "dry_quota_requests": 0,
+    "n_goals": 8,
+    "refusals": [],
+    "t1_kit": 1,
+    "t2_bundles": 7,
+    "t3_units": 1
+  },
+  "provider": null,
+  "quota": {
+    "log": "quota.jsonl",
+    "used": {
+      "gemini": 1,
+      "nvidia": 8
+    }
+  },
+  "report_ref": "report.json",
+  "run_id": "run-20261009T204931Z-9ab547df",
+  "schema": "lucidota-sched/1#run-receipt",
+  "seal": {
+    "chain_head": "664002038ea78b2c9493a1e88f7c9ef5d6b2ee94717fa85258e3f5e3aaccacd4",
+    "n_attempts": 9
+  },
+  "started_at": "2026-10-09T20:49:31.276895+00:00",
+  "wall_seconds": 0.263,
+  "work_order_id": "wo-9ab547dffb0c",
+  "work_order_sha256": "9ab547dffb0c6f73c768f844b5b432194cfd89c490b2dd779038e34a22c5f9fb"
+}

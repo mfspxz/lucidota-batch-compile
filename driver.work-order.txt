@@ -1,0 +1,51 @@
+Objective: Build the pipeline driver CLI — the missing keystone of ~/workspace/compute/pipeline/. A single command that takes a plain-text work-order file and executes it end-to-end: parse → partition → assign → schedule → dispatch Tier-3/2/1 worker units via the PIPE-005 worker runtime → tier checks → ledger receipts → final report. Three modes: --dry-run (plan only), --shadow (plan + compare, no dispatch), --live (full dispatch). Quota guards enforced. Every run produces an evidence-bound receipt. The driver must be FINISHED: installed, tested, documented, runnable.
+
+Development rules:
+- Preserve existing work.
+- Reuse the existing stack (workorder, partition, allocate, worker, checks, retry, prompts, shadow modules — exact symbols, no reinvention).
+- Keep deterministic logic deterministic.
+- Do not exceed assigned resource limits.
+- Production code only; no sketches.
+- brief-lint clean: NEVER git reset/stash/clean --force/checkout --force/push --force or history rewrite.
+- secret-scrub clean: keep test names and string constants under ~40 chars.
+- Commit same-turn.
+- 0 provider calls (direct implementation; fake adapters for dispatch tests).
+
+Goal 1 [implement]: CLI skeleton and argument parsing.
+Implement pipeline/driver.py with argparse: positional work-order file; flags --dry-run, --shadow, --live (exactly one required, else plain error exit 2); --provider, --run-dir (default ./runs/<run_id>), --timeout-secs, --max-attempts. Exit codes: 0 success, 1 run failed, 2 usage error. `python3 -m pipeline.driver --help` works.
+Done-When: python3 -m pipeline.driver --help exits 0 and shows all flags
+
+Goal 2 [implement]: Dry-run path (plan only, zero dispatch).
+Depends-On: 1
+Wire parse_workorder → validate_parsed → partition_checklist → group_related → assemble_t1_kit → assign_tiered → schedule_order using the existing modules. Print the plan: run_id, work_order sha256, counts (T3 units / T2 bundles / T1 kit), scheduled order with tiers and dependencies. No dispatch, no provider calls, no quota reservation. Malformed work order → plain error, exit 1.
+Done-When: driver --dry-run on demo work order prints a complete plan and exits 0
+
+Goal 3 [implement]: Dispatch engine with tier envelopes and worker runtime.
+Depends-On: 2
+For each scheduled allocation in schedule_order, build the tier envelope (worker.t3_envelope / t2_envelope / t1_envelope with prompt_ref pinned via prompts.pin), then worker.run_unit(envelope, allocation, adapter). Adapter interface: adapter.execute(assignment) -> response dict; validate via worker.validate_response / sanitize_or_reject. Modes: --dry-run never reaches here; --shadow uses a fake adapter returning synthetic artifacts AND records what WOULD have dispatched; --live uses real provider adapters. Collect AttemptRecords + envelope-sealed receipts per unit. Artifact dir: <run-dir>/artifacts/<task_id>/.
+Done-When: dispatch of a 3-goal synthetic work order with fake adapter yields 3 sealed receipts
+
+Goal 4 [implement]: Tier checks and fixed retry loop.
+Depends-On: 3
+After each unit attempt, run the tier check (checks.check_t3_completion / check_t2_consistency / check_t1_coherence). On check failure or attempt failure, apply retry.next_action(failure_class, attempt, tier): retry → requeue at tail (bounded by --max-attempts), dead-letter → retry.write_dead_letter, blocked → stop dependent units. Terminal states recorded on the AttemptRecord. A T2 bundle runs its check only after all member T3 refs terminal; T1 coherence only after all T2 terminal.
+Done-When: a failing unit exhausts max-attempts and lands in dead-letter.jsonl with receipt
+
+Goal 5 [implement]: Quota guards on every dispatch.
+Depends-On: 3
+QuotaCoordinator.reserve() before each dispatch with idempotency keys; release/reconcile after. Enforce: per-provider RPM ceilings (NVIDIA 39 policy / Gemini 10 measured — schedule sustainably BELOW; TPM/concurrency UNMEASURED → refuse with NO_MEASURED_EVIDENCE, never invent); NVIDIA band guard: pause dispatch at utilization >= 0.55 with plain message; double-spend refused. Guard trip → run stops dispatching, completed work kept, plain report.
+Done-When: reserve-then-dispatch refuses the 40th concurrent NVIDIA reservation and pauses at 0.55 band
+
+Goal 6 [implement]: Run receipts and final report.
+Depends-On: 4, 5
+Every run writes <run-dir>/run-receipt.json: run_id, work_order_sha256, mode, provider, plan summary, attempts (task_id, tier, terminal_state, receipt_ref), check results, quota consumed per provider, dead letters, started/finished timestamps. Envelope-seal the receipt (sha256 chain over attempt receipts). Print human-readable final report to stdout AND write <run-dir>/report.json: totals, per-tier pass/fail, quota used, wall-clock, receipt path.
+Done-When: a --dry-run produces a sealed run-receipt.json that verifies by recomputation
+
+Goal 7 [test]: Full test suite for the driver.
+Depends-On: 6
+At least 25 tests in pipeline/driver_test.py: arg parsing (mode exclusivity, exit codes), dry-run plan output, dispatch ordering with fake adapter, retry exhaustion → dead letter, guard refusal at band, receipt sealing/verification, all three modes, malformed work order plain error. No real provider calls in tests.
+Done-When: python3 -m pytest driver_test.py -q green with >=25 tests
+
+Goal 8 [document]: Driver documentation and installed entrypoint.
+Depends-On: 7
+Write pipeline/DRIVER.md: usage, modes explained, examples (dry-run/shadow/live), quota guards, receipt format, exit codes. Ensure `python3 -m pipeline.driver` works from ~/workspace/compute and driver.py has a `main()` entrypoint. The driver is runnable, tested, documented.
+Done-When: a fresh reader can run the driver on a sample work order from DRIVER.md alone
