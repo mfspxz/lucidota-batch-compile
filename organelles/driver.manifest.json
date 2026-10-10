@@ -2,7 +2,7 @@
   "authority": {
     "declared_valence": "candidate",
     "granted_capabilities": [
-      "batch-compile.driver:live"
+      "batch-compile.driver.live"
     ],
     "mutation_class": "external_effect",
     "required_capability": null
@@ -65,7 +65,7 @@
       },
       "mutation_class": "external_effect",
       "op": "live_run",
-      "required_capability": "batch-compile.driver:live"
+      "required_capability": "batch-compile.driver.live"
     }
   ],
   "description": "Batch-compile mission driver: executes work orders through compute/pipeline (dry/shadow/live).",
